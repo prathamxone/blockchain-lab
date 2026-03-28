@@ -911,6 +911,6 @@ Commit at each checkpoint. Use the exact format: `<type>(<scope>): <summary>`
 
 ---
 
-*Maintained by [Pratham Diwadkar](https://github.com/prathamdxkar) — INFT, Atharva College of Engineering*
+*Maintained by [Pratham Diwadkar](https://github.com/prathamxone) — INFT, Atharva College of Engineering*
 *This plan governs [`Exp-3/EXP-3_PLAN.md`](EXP-3_PLAN.md) in the Blockchain Lab repository.*
 

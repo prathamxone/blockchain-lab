@@ -954,7 +954,7 @@ FILE_LENGTH_TAG=soft
 
 ---
 
-*Maintained by [Pratham Diwadkar](https://github.com/prathamdxkar) — INFT, Atharva College of Engineering*
+*Maintained by [Pratham Diwadkar](https://github.com/prathamxone) — INFT, Atharva College of Engineering*
 *This document governs all `Exp-*/EXP-*_PLAN.md` files in the Blockchain Lab repository.*
 
 

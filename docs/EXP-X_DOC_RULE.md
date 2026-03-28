@@ -591,6 +591,6 @@ We have successfully <action> <what was built> using <tools>. <One sentence desc
 
 ---
 
-*Maintained by [Pratham Diwadkar](https://github.com/prathamdxkar) — INFT, Atharva College of Engineering*
+*Maintained by [Pratham Diwadkar](https://github.com/prathamxone) — INFT, Atharva College of Engineering*
 *This document governs all `Exp-*/EXP-*_DOC.md` evaluation files in the Blockchain Lab repository.*
 

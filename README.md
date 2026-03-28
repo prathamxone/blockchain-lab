@@ -153,4 +153,4 @@ repository. Course content, syllabi, and lab manuals are the intellectual proper
 
 ---
 
-*Maintained by [Pratham Diwadkar](https://github.com/prathamdxkar) — INFT, Atharva College of Engineering*
+*Maintained by [Pratham Diwadkar](https://github.com/prathamxone) — INFT, Atharva College of Engineering*

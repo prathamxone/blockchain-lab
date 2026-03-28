@@ -861,4 +861,4 @@ If `wsl --install` fails with a virtualization error:
 
 ---
 
-*Last updated: February 2026 | For issues, open a GitHub Issue at https://github.com/prathamdxkar/blockchain-lab*
+*Last updated: February 2026 | For issues, open a GitHub Issue at https://github.com/prathamxone/blockchain-lab*
