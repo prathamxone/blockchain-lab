@@ -13,6 +13,7 @@ describe('PaxtonToken', function () {
     [owner, addr1, addr2] = await ethers.getSigners();
     const PaxtonToken = await ethers.getContractFactory('PaxtonToken');
     token = await PaxtonToken.deploy(owner.address);
+    await token.waitForDeployment(); // ethers v6: wait for contract to be mined before tests run
   });
 
   // ─── Block A — Deployment ────────────────────────────────────────────────
@@ -27,7 +28,7 @@ describe('PaxtonToken', function () {
     });
 
     it('should set decimals to 18', async function () {
-      expect(await token.decimals()).to.equal(18);
+      expect(await token.decimals()).to.equal(18n); // ethers v6: decimals() returns BigInt
     });
 
     it('should mint the initial supply to the deployer', async function () {
@@ -45,7 +46,7 @@ describe('PaxtonToken', function () {
   describe('Transfer', function () {
     it('should transfer tokens between accounts', async function () {
       const amount = ethers.parseUnits('100', 18);
-      await token.transfer(addr1.address, amount);
+      await (await token.transfer(addr1.address, amount)).wait(); // ethers v6: mine tx before asserting
       expect(await token.balanceOf(addr1.address)).to.equal(amount);
       expect(await token.balanceOf(owner.address)).to.equal(INITIAL_SUPPLY - amount);
     });
@@ -80,7 +81,7 @@ describe('PaxtonToken', function () {
       await token.connect(addr1).transferFrom(owner.address, addr2.address, amount);
 
       expect(await token.balanceOf(addr2.address)).to.equal(amount);
-      expect(await token.allowance(owner.address, addr1.address)).to.equal(0);
+      expect(await token.allowance(owner.address, addr1.address)).to.equal(0n); // ethers v6: allowance returns BigInt
     });
 
     it('should revert transferFrom without sufficient allowance', async function () {

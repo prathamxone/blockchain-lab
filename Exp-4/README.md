@@ -77,15 +77,18 @@ npx hardhat verify --network sepolia <TOKEN_CONTRACT_ADDRESS> <INITIAL_OWNER_ADD
 
 ### 4. Run Interaction Script
 
+An explicit token address is always required (no fallback). By default the script is **read-only**
+(metadata + balances). Pass `--transfer` to execute a live 100 PXT transfer.
+
 ```bash
 # Option A: pass token address directly (recommended)
 npx hardhat run scripts/interact.js --network sepolia -- <TOKEN_CONTRACT_ADDRESS>
 
-# Option B: use env variable fallback
+# Option B: use env variable
 PAXTON_TOKEN_ADDRESS=<TOKEN_CONTRACT_ADDRESS> npx hardhat run scripts/interact.js --network sepolia
 
-# Option C: run without args/env to use the constant fallback in scripts/interact.js
-npx hardhat run scripts/interact.js --network sepolia
+# To also execute a live transfer (opt-in):
+npx hardhat run scripts/interact.js --network sepolia -- <TOKEN_CONTRACT_ADDRESS> --transfer
 ```
 
 ### 5. Add Token to MetaMask

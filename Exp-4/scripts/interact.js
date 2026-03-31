@@ -3,26 +3,31 @@ const { ethers } = require('hardhat');
 /**
  * Post-deploy interaction script for PaxtonToken on Sepolia.
  *
- * Usage:
- *   npx hardhat run scripts/interact.js --network sepolia -- <TOKEN_CONTRACT_ADDRESS>
+ * Usage (address is required — no fallback):
+ *   Option A (CLI):  npx hardhat run scripts/interact.js --network sepolia -- <TOKEN_ADDRESS>
+ *   Option B (env):  PAXTON_TOKEN_ADDRESS=<TOKEN_ADDRESS> npx hardhat run scripts/interact.js --network sepolia
  *
- * Queries token metadata (name, symbol, totalSupply), deployer balance,
- * and performs a test transfer to a second address.
+ * By default the script is read-only (metadata + balance queries).
+ * Pass --transfer to execute a live 100 PXT transfer (opt-in, with balance check).
+ *   npx hardhat run scripts/interact.js --network sepolia -- <TOKEN_ADDRESS> --transfer
  */
 
 // ── Configuration ────────────────────────────────────────────────────────────
-// Priority: CLI arg > env var > fallback constant
-const FALLBACK_TOKEN_ADDRESS = '0xe9A6b9C4c8DfCBCbaa73977c4cCaa97717FD6F99';
+// Priority: CLI arg > PAXTON_TOKEN_ADDRESS env var
+// No fallback — an explicit address is always required to prevent accidental
+// interactions with the wrong contract instance.
 
 function resolveTokenAddress() {
   // Hardhat forwards user arguments after `--`; scan argv for the first valid address.
   const cliAddress = process.argv.slice(2).find((arg) => ethers.isAddress(arg));
   const envAddress = process.env.PAXTON_TOKEN_ADDRESS;
-  const candidate = cliAddress || envAddress || FALLBACK_TOKEN_ADDRESS;
+  const candidate = cliAddress || envAddress;
 
-  if (!ethers.isAddress(candidate)) {
+  if (!candidate || !ethers.isAddress(candidate)) {
     throw new Error(
-      'Invalid token address. Provide a valid address as CLI arg or PAXTON_TOKEN_ADDRESS env var.'
+      'Token address is required.\n' +
+        '  Option A (CLI):  npx hardhat run scripts/interact.js --network sepolia -- <TOKEN_ADDRESS>\n' +
+        '  Option B (env):  PAXTON_TOKEN_ADDRESS=<TOKEN_ADDRESS> npx hardhat run scripts/interact.js --network sepolia'
     );
   }
 
@@ -36,10 +41,10 @@ async function main() {
   const signers = await ethers.getSigners();
   const deployer = signers[0];
 
-  // On Sepolia (single signer), use a second address for transfer demo.
+  // On Sepolia (single signer), fall back to the deployer address to avoid burning tokens.
   // On local hardhat (multiple signers), use the second signer.
   const recipientAddress =
-    signers.length > 1 ? signers[1].address : '0x000000000000000000000000000000000000dEaD'; // burn address for demo
+    signers.length > 1 ? signers[1].address : deployer.address;
 
   console.log('═══════════════════════════════════════════════════════════');
   console.log('  PaxtonToken (PXT) — Sepolia Interaction Script');
@@ -75,34 +80,56 @@ async function main() {
   console.log('  Recipient :', ethers.formatUnits(recipientBalance, decimals), symbol);
   console.log();
 
-  // ── Test transfer ────────────────────────────────────────────────────────
+  // ── Optional transfer (opt-in via --transfer flag) ───────────────────────
+  // Pass --transfer on the CLI to execute a live token transfer.
+  // Without the flag, the script is read-only and safe to run repeatedly.
+  const doTransfer = process.argv.includes('--transfer');
   const transferAmount = ethers.parseUnits('100', decimals);
+
   console.log('── Transfer ──────────────────────────────────────────────');
-  console.log(
-    '  Transferring',
-    ethers.formatUnits(transferAmount, decimals),
-    symbol,
-    'to',
-    recipientAddress,
-    '...'
-  );
+  if (!doTransfer) {
+    console.log('  (Skipped — pass --transfer flag to execute a live transfer)');
+    console.log();
+  } else {
+    // Balance check: ensure deployer has enough tokens before sending
+    if (deployerBalance < transferAmount) {
+      console.log(
+        '  ⚠ Insufficient balance for transfer:',
+        ethers.formatUnits(deployerBalance, decimals),
+        symbol,
+        '< 100',
+        symbol
+      );
+      console.log('  (Transfer skipped)');
+      console.log();
+    } else {
+      console.log(
+        '  Transferring',
+        ethers.formatUnits(transferAmount, decimals),
+        symbol,
+        'to',
+        recipientAddress,
+        '...'
+      );
 
-  const tx = await token.transfer(recipientAddress, transferAmount);
-  const receipt = await tx.wait();
+      const tx = await token.transfer(recipientAddress, transferAmount);
+      const receipt = await tx.wait();
 
-  console.log('  Tx hash   :', receipt.hash);
-  console.log('  Block #   :', receipt.blockNumber.toString());
-  console.log('  Gas used  :', receipt.gasUsed.toString());
-  console.log();
+      console.log('  Tx hash   :', receipt.hash);
+      console.log('  Block #   :', receipt.blockNumber.toString());
+      console.log('  Gas used  :', receipt.gasUsed.toString());
+      console.log();
 
-  // ── Post-transfer balances ───────────────────────────────────────────────
-  const deployerBalanceAfter = await token.balanceOf(deployer.address);
-  const recipientBalanceAfter = await token.balanceOf(recipientAddress);
+      // ── Post-transfer balances ─────────────────────────────────────────
+      const deployerBalanceAfter = await token.balanceOf(deployer.address);
+      const recipientBalanceAfter = await token.balanceOf(recipientAddress);
 
-  console.log('── Balances After Transfer ───────────────────────────────');
-  console.log('  Deployer  :', ethers.formatUnits(deployerBalanceAfter, decimals), symbol);
-  console.log('  Recipient :', ethers.formatUnits(recipientBalanceAfter, decimals), symbol);
-  console.log();
+      console.log('── Balances After Transfer ───────────────────────────────');
+      console.log('  Deployer  :', ethers.formatUnits(deployerBalanceAfter, decimals), symbol);
+      console.log('  Recipient :', ethers.formatUnits(recipientBalanceAfter, decimals), symbol);
+      console.log();
+    }
+  }
 
   console.log('═══════════════════════════════════════════════════════════');
   console.log('  Interaction complete ✅');
