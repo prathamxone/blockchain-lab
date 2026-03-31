@@ -27,19 +27,21 @@ with the token from a MetaMask wallet.
 ```
 Exp-4/
 ├── contracts/
-│   └── MyToken.sol         # ERC-20 token contract (to be created)
+│   └── PaxtonToken.sol     # ERC-20 Paxton (PXT) token contract
 ├── ignition/
 │   └── modules/
 │       └── Deploy.js       # Hardhat Ignition deployment module
-├── migrations/             # Truffle migrations (local testing)
+├── scripts/
+│   └── interact.js         # Post-deploy interaction script (ethers.js)
 ├── test/
-│   └── MyToken.test.js     # Test suite for the ERC-20 token
+│   └── PaxtonToken.test.js # Mocha/Chai test suite (15 tests)
+├── screenshots/            # Output screenshots for EXP-4_DOC.md
 ├── .env                    # Secrets (NOT committed)
 ├── .env.example            # Template for .env
 ├── .nvmrc                  # Node version (22)
 ├── .prettierrc             # Code formatter config
 ├── hardhat.config.js       # Hardhat config (includes Sepolia)
-├── truffle-config.js       # Truffle config (local dev)
+├── truffle-config.js       # Legacy local config (not used in Exp-4 flow)
 └── package.json            # npm manifest
 ```
 
@@ -51,72 +53,56 @@ Exp-4/
 2. MetaMask wallet with Sepolia test ETH (from a faucet)
 3. Remix IDE open: https://remix.ethereum.org
 
-### 1. Create the ERC-20 Token Contract
-
-Create `contracts/MyToken.sol`:
-
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.21;
-
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract MyToken is ERC20, Ownable {
-    constructor(address initialOwner)
-        ERC20("MyToken", "MTK")
-        Ownable(initialOwner)
-    {
-        // Mint 1,000,000 tokens to the deployer (1e6 * 10^decimals)
-        _mint(msg.sender, 1_000_000 * 10 ** decimals());
-    }
-
-    function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount);
-    }
-}
-```
-
-### 2. Compile and Test Locally
+### 1. Compile and Test Locally
 
 ```bash
 cd Exp-4
 nvm use 22
+npm install
 npx hardhat compile
 npx hardhat test
 ```
 
-### 3. Deploy to Local Hardhat Network
-
-```bash
-npx hardhat node        # Start local node in a new terminal
-npx hardhat ignition deploy ./ignition/modules/Deploy.js --network localhost
-```
-
-### 4. Deploy to Sepolia Testnet
+### 2. Deploy to Sepolia Testnet
 
 ```bash
 npx hardhat ignition deploy ./ignition/modules/Deploy.js --network sepolia
 ```
 
-### 5. Verify on Etherscan
+### 3. Verify on Etherscan
 
 ```bash
 npx hardhat verify --network sepolia <TOKEN_CONTRACT_ADDRESS> <INITIAL_OWNER_ADDRESS>
 ```
 
-### 6. Add Token to MetaMask
+### 4. Run Interaction Script
+
+An explicit token address is always required (no fallback). By default the script is **read-only**
+(metadata + balances). Pass `--transfer` to execute a live 100 PXT transfer.
+
+```bash
+# Option A: pass token address directly (recommended)
+npx hardhat run scripts/interact.js --network sepolia -- <TOKEN_CONTRACT_ADDRESS>
+
+# Option B: use env variable
+PAXTON_TOKEN_ADDRESS=<TOKEN_CONTRACT_ADDRESS> npx hardhat run scripts/interact.js --network sepolia
+
+# To also execute a live transfer (opt-in):
+npx hardhat run scripts/interact.js --network sepolia -- <TOKEN_CONTRACT_ADDRESS> --transfer
+```
+
+### 5. Add Token to MetaMask
 
 1. In MetaMask → Import tokens → Paste the contract address
-2. Token symbol and decimals auto-populate from the contract
-3. Your token balance should appear
+2. Token symbol (PXT) and decimals (18) auto-populate from the contract
+3. Your token balance (1,000,000 PXT) should appear
 
-### 7. Alternatively — Deploy via Remix + MetaMask
+### 6. Deploy via Remix + MetaMask (Alternative)
 
 1. ```bash
    remixd -s ./contracts --remix-ide https://remix.ethereum.org
    ```
-2. Open Remix → Connect to Localhost → open `MyToken.sol`
+2. Open Remix → Connect to Localhost → open `PaxtonToken.sol`
 3. Compile → Deploy with **Injected Provider - MetaMask** (switch to Sepolia)
 4. Confirm transaction in MetaMask
 
@@ -127,18 +113,20 @@ After deployment:
 ```
 Deployed Addresses
 ==================
-MyTokenModule#MyToken - 0x<TOKEN_ADDRESS>
+PaxtonTokenModule#PaxtonToken - 0x<TOKEN_ADDRESS>
 ```
 
 After adding to MetaMask:
-- Token **MTK** appears in your MetaMask wallet
-- Balance shows **1,000,000 MTK**
+- Token **PXT** appears in your MetaMask wallet
+- Balance shows **1,000,000 PXT**
 - Verified contract visible at: https://sepolia.etherscan.io/address/0x<TOKEN_ADDRESS>
 
 ## Notes
 
 - `decimals()` returns 18 by default in OpenZeppelin ERC-20.
 - Use `ethers.parseUnits("100", 18)` in tests to represent 100 tokens.
+- The `mint()` function is owner-gated — only the deployer can mint additional tokens.
+- The `burn()` function is public — any holder can burn their own tokens.
 - Never deploy a token with real monetary value as a lab exercise.
 
 ---

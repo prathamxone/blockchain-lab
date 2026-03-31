@@ -511,4 +511,4 @@ done
 
 ---
 
-*Last updated: February 2026 | Repository: https://github.com/prathamdxkar/blockchain-lab*
+*Last updated: February 2026 | Repository: https://github.com/prathamxone/blockchain-lab*

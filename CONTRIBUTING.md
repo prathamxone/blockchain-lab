@@ -234,7 +234,7 @@ When opening a PR, use the following structure in the description:
 
 ### Review Process
 
-1. Assign **@prathamdxkar** (maintainer) as reviewer.
+1. Assign **@prathamxone** (maintainer) as reviewer.
 2. Address all review comments before re-requesting a review.
 3. Once approved, the PR will be merged using **Squash and Merge** to keep `main` history clean.
 4. Delete your feature branch after a successful merge only if it is a one-off branch. Personal
@@ -425,8 +425,8 @@ If you have questions about setting up the development environment, refer to:
 - **[docs/BLOCKCHAIN_LAB_MANUAL.md](docs/BLOCKCHAIN_LAB_MANUAL.md)** — Lab manual with experiment procedures
 
 For repository-specific questions or to report an issue, open a
-[GitHub Issue](https://github.com/prathamdxkar/blockchain-lab/issues).
+[GitHub Issue](https://github.com/prathamxone/blockchain-lab/issues).
 
 ---
 
-*Maintained by [Pratham Diwadkar](https://github.com/prathamdxkar) — INFT, Atharva College of Engineering*
+*Maintained by [Pratham Diwadkar](https://github.com/prathamxone) — INFT, Atharva College of Engineering*

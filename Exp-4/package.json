@@ -11,6 +11,7 @@
     "deploy:ganache": "npx hardhat ignition deploy ./ignition/modules/Deploy.js --network ganache",
     "deploy:sepolia": "npx hardhat ignition deploy ./ignition/modules/Deploy.js --network sepolia",
     "verify:sepolia": "npx hardhat verify --network sepolia",
+    "interact:sepolia": "npx hardhat run scripts/interact.js --network sepolia",
     "truffle:compile": "truffle compile",
     "truffle:migrate": "truffle migrate --network development",
     "truffle:test": "truffle test",
