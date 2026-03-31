@@ -98,7 +98,7 @@ After installing dependencies, configure your VS Code editor:
 | 1 | [Exp-1](Exp-1/) | Develop and establish a local Ethereum blockchain using Truffle Suite and Ganache | LO1 | Truffle, Ganache, Hardhat | ✅ Complete |
 | 2 | [Exp-2](Exp-2/) | Develop and establish smart contract and chain code | LO2 | Truffle, Ganache, Hardhat, Web3.js | ✅ Complete |
 | 3 | [Exp-3](Exp-3/) | Deploy and publish smart contracts on Ethereum Sepolia testnet | LO3 | Hardhat, Alchemy/Infura, MetaMask | ✅ Complete |
-| 4 | [Exp-4](Exp-4/) | Design and develop a custom ERC-20 cryptocurrency with MetaMask | LO4 | Hardhat, OpenZeppelin, Remix IDE, MetaMask | ⬜ Pending |
+| 4 | [Exp-4](Exp-4/) | Design and develop a custom ERC-20 cryptocurrency with MetaMask | LO4 | Hardhat, OpenZeppelin, Remix IDE, MetaMask | ✅ Complete |
 | 5 | [Exp-5](Exp-5/) | Write, package, install, and deploy chain code in Hyperledger Fabric | LO5 | Docker, Hyperledger Fabric v2.5, Node.js v20 | ⬜ Pending |
 | 6 | [Exp-6](Exp-6/) | Mini Project — Full-fledged DApp on Ethereum | LO6 | Foundry, Hardhat 3, Solidity | ⬜ Pending |
 
