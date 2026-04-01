@@ -49,15 +49,15 @@ docker compose version # Docker Compose v2.x.x
 
 ### 2. Install Hyperledger Fabric Samples
 
-Clone the official fabric-samples repository (DO NOT clone inside this Exp-5 folder):
+Install fabric-samples, Fabric binaries, and Docker images using the official script (DO NOT run inside this Exp-5 folder):
 
 ```bash
 cd ~
-curl -sSL https://bit.ly/2ysbOFE | bash -s   # Installs fabric-samples + binaries + docker images
-# OR manually:
-git clone https://github.com/hyperledger/fabric-samples.git
-cd fabric-samples
+curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
+./install-fabric.sh --fabric-version 2.5.15 docker samples binary
 ```
+
+> **Note:** The old `curl -sSL https://bit.ly/2ysbOFE | bash -s` bootstrap URL is deprecated. Always use `install-fabric.sh` for new installs.
 
 Add Fabric binaries to PATH:
 
