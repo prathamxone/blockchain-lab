@@ -9,7 +9,7 @@ FILE_LENGTH_TAG=medium
 
 ## Table of Contents
 
-- [EXP-5_PLAN — Deployment of Chain Code in Hyperledger Fabric](#exp-5_plan--deployment-of-chain-code-in-hyperledger-fabric)
+- [EXP-5\_PLAN — Deployment of Chain Code in Hyperledger Fabric](#exp-5_plan--deployment-of-chain-code-in-hyperledger-fabric)
   - [Table of Contents](#table-of-contents)
   - [0. Experiment Snapshot](#0-experiment-snapshot)
     - [Network Awareness](#network-awareness)
@@ -31,12 +31,12 @@ FILE_LENGTH_TAG=medium
     - [Phase 6 — Invoke \& Query Chaincode](#phase-6--invoke--query-chaincode)
     - [Phase 7 — Teardown \& Final Cleanup](#phase-7--teardown--final-cleanup)
   - [4. Crucial Development Moments (CDM)](#4-crucial-development-moments-cdm)
-    - [CDM-1 — Node Version Must Be 20 — Do NOT Use Node 22 or 24 _(Phase 1)_](#cdm-1--node-version-must-be-20--do-not-use-node-22-or-24-phase-1)
-    - [CDM-2 — Docker Daemon Not Running or Wrong Container Mode _(Phase 1)_](#cdm-2--docker-daemon-not-running-or-wrong-container-mode-phase-1)
-    - [CDM-3 — Fabric Binaries Not in PATH _(Phase 1)_](#cdm-3--fabric-binaries-not-in-path-phase-1)
-    - [CDM-4 — CORE\_PEER\_TLS\_ENABLED and Peer TLS Env Vars Not Set _(Phase 5)_](#cdm-4--core_peer_tls_enabled-and-peer-tls-env-vars-not-set-phase-5)
-    - [CDM-5 — Chaincode Package ID Mismatch After Reinstall _(Phase 5)_](#cdm-5--chaincode-package-id-mismatch-after-reinstall-phase-5)
-    - [CDM-6 — What deployCC Does Under the Hood: Full Manual Lifecycle Reference _(Phase 5)_](#cdm-6--what-deploycc-does-under-the-hood-full-manual-lifecycle-reference-phase-5)
+      - [CDM-1 — Node Version Must Be 20 — Do NOT Use Node 22 or 24 _(Phase 1)_](#cdm-1--node-version-must-be-20--do-not-use-node-22-or-24-phase-1)
+      - [CDM-2 — Docker Daemon Not Running or Wrong Container Mode _(Phase 1)_](#cdm-2--docker-daemon-not-running-or-wrong-container-mode-phase-1)
+      - [CDM-3 — Fabric Binaries Not in PATH _(Phase 1)_](#cdm-3--fabric-binaries-not-in-path-phase-1)
+      - [CDM-4 — CORE\_PEER\_TLS\_ENABLED and Peer TLS Env Vars Not Set _(Phase 5)_](#cdm-4--core_peer_tls_enabled-and-peer-tls-env-vars-not-set-phase-5)
+      - [CDM-5 — Chaincode Package ID Mismatch After Reinstall _(Phase 5)_](#cdm-5--chaincode-package-id-mismatch-after-reinstall-phase-5)
+      - [CDM-6 — What deployCC Does Under the Hood: Full Manual Lifecycle Reference _(Phase 5)_](#cdm-6--what-deploycc-does-under-the-hood-full-manual-lifecycle-reference-phase-5)
   - [5. Manual Execution Tasks](#5-manual-execution-tasks)
     - [MET-1 — Install Hyperledger Fabric Samples, Binaries \& Docker Images _(before Phase 1)_](#met-1--install-hyperledger-fabric-samples-binaries--docker-images-before-phase-1)
     - [MET-2 — Export Fabric Binaries to PATH _(before Phase 1)_](#met-2--export-fabric-binaries-to-path-before-phase-1)
@@ -50,7 +50,7 @@ FILE_LENGTH_TAG=medium
     - [6.6 Security \& Hygiene](#66-security--hygiene)
     - [6.7 Documentation](#67-documentation)
   - [7. Known Issues \& Fixes](#7-known-issues--fixes)
-    - [Issue-1 — Deprecated Fabric Bootstrap URL (`bit.ly/2ysbOFE`)](#issue-1--deprecated-fabric-bootstrap-url-bitly2ysboe)
+    - [Issue-1 — Deprecated Fabric Bootstrap URL (`bit.ly/2ysbOFE`)](#issue-1--deprecated-fabric-bootstrap-url-bitly2ysbofe)
     - [Issue-2 — `docker-compose` vs `docker compose` Command Difference](#issue-2--docker-compose-vs-docker-compose-command-difference)
     - [Issue-3 — CORE\_PEER\_TLS Env Vars Lost Across Terminal Sessions](#issue-3--core_peer_tls-env-vars-lost-across-terminal-sessions)
     - [Issue-4 — Chaincode Path Must Have `node_modules/` Before deployCC](#issue-4--chaincode-path-must-have-node_modules-before-deploycc)
@@ -159,11 +159,11 @@ Run these checks **before starting Phase 1**. Do not proceed if any item fails.
 
 | # | File Path (relative to `Exp-5/`) | Action | Phase | Purpose |
 |---|----------------------------------|--------|-------|---------|
-| 1 | `chaincode/javascript/lib/myAsset.js` | VERIFY | 2 | Asset management chaincode — 7 functions: InitLedger, CreateAsset, ReadAsset, UpdateAsset, DeleteAsset, AssetExists, TransferAsset, GetAllAssets |
+| 1 | `chaincode/javascript/lib/myAsset.js` | VERIFY | 2 | Asset management chaincode — 8 functions: InitLedger, CreateAsset, ReadAsset, UpdateAsset, DeleteAsset, AssetExists, TransferAsset, GetAllAssets |
 | 2 | `chaincode/javascript/index.js` | VERIFY | 2 | Chaincode entry point — exports `MyAssetContract`; `module.exports.contracts` array required by fabric-shim |
 | 3 | `chaincode/javascript/package.json` | VERIFY | 2 | npm manifest — confirms `fabric-contract-api ^2.5.0`, `fabric-shim ^2.5.0`, `engines.node ≥18` |
 | 4 | `.nvmrc` | VERIFY | 1 | Node version pin — must be `20` for Hyperledger Fabric compatibility |
-| 5 | `screenshots/` | VERIFY | 6 | Directory for all output screenshots — `.gitkeep` until real screenshots are added |
+| 5 | `screenshots/` | VERIFY | 6 | Directory containing all output screenshots used for validation and lab records |
 | 6 | `EXP-5_PLAN.md` | VERIFY | — | Confirm `FILE_LENGTH_TAG` on line 1 matches actual line count after authoring |
 | 7 | `../docs/BLOCKCHAIN_LAB_MANUAL.md` | VERIFY | — | Source of LO text for §0 and the evaluation file |
 
@@ -215,7 +215,7 @@ lsof -i :7050 -i :7051 -i :9051 -i :7054
 <!-- TOOL: FABRIC -->
 
 **Logical Flow**:
-1. Review `chaincode/javascript/lib/myAsset.js` — confirm `class MyAssetContract extends Contract` with all 7 functions:
+1. Review `chaincode/javascript/lib/myAsset.js` — confirm `class MyAssetContract extends Contract` with all 8 functions:
    - `InitLedger(ctx)` — seeds world state with 6 sample assets
    - `CreateAsset(ctx, id, color, size, owner, appraisedValue)` — validates non-existence → `putState`
    - `ReadAsset(ctx, id)` — `getState` → validates existence → returns JSON string

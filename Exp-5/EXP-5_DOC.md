@@ -1,10 +1,10 @@
-# Exp-5: To study the deployment of chain code in hyper ledger fabric
+# Exp-5: To study the deployment of chaincode in Hyperledger Fabric
 
 ---
 
 ## AIM
 
-To study the deployment of chain code in hyper ledger fabric.
+To study the deployment of chaincode in Hyperledger Fabric.
 
 ---
 
@@ -27,7 +27,7 @@ To study the deployment of chain code in hyper ledger fabric.
 - **Endorsement Policy**: Rule defining which organizations' peers must endorse a transaction (e.g., "approval from both Org1MSP and Org2MSP").
 - **Channel**: Private ledger visible only to selected organizations; each peer on a channel maintains a copy of the ledger.
 - **MSP (Member Service Provider)**: Identity provider managing certificates and access control per organization.
-- **Docker**: Hyperledger Fabric v29.3.1 (released March 2026) dynamically launches chaincode containers on-demand during invoke execution.
+- **Docker**: Docker v29.3.1 (released March 2026) provides containerization used by Hyperledger Fabric to dynamically launch chaincode containers on-demand during invoke execution.
 - **fabric-samples**: Official test-network providing two-organization (Org1, Org2), one-channel setup for development and testing.
 
 ---
@@ -39,21 +39,21 @@ To study the deployment of chain code in hyper ledger fabric.
 **`chaincode/javascript/package.json`**:
 ```json
 {
-  "name": "myAsset",
+  "name": "myasset-chaincode",
   "version": "1.0.0",
-  "description": "Asset Transfer Chaincode in Node.js",
+  "description": "Hyperledger Fabric JavaScript Chaincode — Asset Management (Exp-5)",
   "main": "index.js",
   "engines": {
-    "node": "20"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "start": "fabric-chaincode-node start"
   },
-  "license": "Apache-2.0",
   "dependencies": {
-    "fabric-contract-api": "^2.5.8",
-    "fabric-shim": "^2.5.8"
-  }
+    "fabric-contract-api": "^2.5.0",
+    "fabric-shim": "^2.5.0"
+  },
+  "license": "MIT"
 }
 ```
 
@@ -61,9 +61,10 @@ To study the deployment of chain code in hyper ledger fabric.
 ```javascript
 'use strict';
 
-const MyAsset = require('./lib/myAsset');
+const { MyAssetContract } = require('./lib/myAsset');
 
-module.exports.contracts = [MyAsset];
+module.exports.MyAssetContract = MyAssetContract;
+module.exports.contracts = [MyAssetContract];
 ```
 
 **`chaincode/javascript/lib/myAsset.js`** (lines 1–60):
@@ -72,58 +73,100 @@ module.exports.contracts = [MyAsset];
 
 const { Contract } = require('fabric-contract-api');
 
-class MyAsset extends Contract {
+class MyAssetContract extends Contract {
+  async InitLedger(ctx) {
+    const assets = [
+      {
+        ID: 'asset1',
+        Color: 'blue',
+        Size: 5,
+        Owner: 'Tomoko',
+        AppraisedValue: 300,
+      },
+      {
+        ID: 'asset2',
+        Color: 'red',
+        Size: 5,
+        Owner: 'Brad',
+        AppraisedValue: 400,
+      },
+      {
+        ID: 'asset3',
+        Color: 'green',
+        Size: 10,
+        Owner: 'Jin Soo',
+        AppraisedValue: 500,
+      },
+      {
+        ID: 'asset4',
+        Color: 'yellow',
+        Size: 10,
+        Owner: 'Max',
+        AppraisedValue: 600,
+      },
+      {
+        ID: 'asset5',
+        Color: 'black',
+        Size: 15,
+        Owner: 'Adriana',
+        AppraisedValue: 700,
+      },
+      {
+        ID: 'asset6',
+        Color: 'white',
+        Size: 15,
+        Owner: 'Michel',
+        AppraisedValue: 800,
+      },
+    ];
 
-    async initLedger(ctx) {
-        console.info('============= START : Initialize Ledger ===========');
-        const assets = [
-            { ID: 'asset1', Color: 'blue', Size: 5, Owner: 'Tomoko', AppraisedValue: 300 },
-            { ID: 'asset2', Color: 'red', Size: 5, Owner: 'Brad', AppraisedValue: 400 },
-            { ID: 'asset3', Color: 'green', Size: 10, Owner: 'Jin Soo', AppraisedValue: 500 },
-        ];
-        for (let i = 0; i < assets.length; i++) {
-            await ctx.stub.putState(assets[i].ID, Buffer.from(JSON.stringify(assets[i])));
-        }
-        console.info('============= END : Initialize Ledger ===========');
+    for (const asset of assets) {
+      asset.docType = 'asset';
+      await ctx.stub.putState(asset.ID, Buffer.from(JSON.stringify(asset)));
+      console.info(`Asset ${asset.ID} initialized`);
+    }
+  }
+
+  async TransferAsset(ctx, id, newOwner) {
+    const assetString = await this.ReadAsset(ctx, id);
+    const asset = JSON.parse(assetString);
+    const oldOwner = asset.Owner;
+    asset.Owner = newOwner;
+    await ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
+    return oldOwner;
+  }
+
+  async ReadAsset(ctx, id) {
+    const assetJSON = await ctx.stub.getState(id);
+    if (!assetJSON || assetJSON.length === 0) {
+      throw new Error(`The asset ${id} does not exist`);
+    }
+    return assetJSON.toString();
+  }
+
+  async GetAllAssets(ctx) {
+    const allResults = [];
+    const iterator = await ctx.stub.getStateByRange('', '');
+    let result = await iterator.next();
+
+    while (!result.done) {
+      const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
+      let record;
+      try {
+        record = JSON.parse(strValue);
+      } catch (err) {
+        console.log(err);
+        record = strValue;
+      }
+      allResults.push(record);
+      result = await iterator.next();
     }
 
-    async transferAsset(ctx, id, newOwner) {
-        console.info('============= START : transferAsset ===========');
-        const assetAsBytes = await ctx.stub.getState(id);
-        if (!assetAsBytes || assetAsBytes.length === 0) {
-            throw new Error(`The asset ${id} does not exist`);
-        }
-        const asset = JSON.parse(assetAsBytes.toString());
-        asset.Owner = newOwner;
-        await ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
-        console.info('============= END : transferAsset ===========');
-    }
-
-    async readAsset(ctx, id) {
-        console.info('============= START : readAsset ===========');
-        const assetAsBytes = await ctx.stub.getState(id);
-        if (!assetAsBytes || assetAsBytes.length === 0) {
-            throw new Error(`The asset ${id} does not exist`);
-        }
-        return assetAsBytes.toString();
-    }
-
-    async getAllAssets(ctx) {
-        const allResults = [];
-        const iterator = await ctx.stub.getStateByRange('', '');
-        let result = await iterator.next();
-        while (!result.done) {
-            const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
-            let record;
-            record = JSON.parse(strValue);
-            allResults.push(record);
-            result = await iterator.next();
-        }
-        return JSON.stringify(allResults);
-    }
+    return JSON.stringify(allResults);
+  }
 }
 
-module.exports = MyAsset;
+module.exports = { MyAssetContract };
 ```
 
 **Deployment command** (Hyperledger Fabric test-network):
@@ -132,22 +175,33 @@ module.exports = MyAsset;
 cd ~/fabric-samples/test-network
 
 # Deploy chaincode using the network.sh deployCC shortcut
-./network.sh deployCC -ccn mycc -ccv 1.0 -ccs myAsset -ccl javascript
-# Parameters: ccn (name), ccv (version), ccs (sequence/class), ccl (language)
+./network.sh deployCC -ccn myasset \
+  -ccp ../chaincode/myasset/javascript \
+  -ccl javascript \
+  -ccv 1.0 \
+  -ccs 1
+# Parameters: ccn (name), ccp (path), ccl (language), ccv (version), ccs (sequence)
 ```
 
 **Peer invoke and query commands** (manual execution):
 ```bash
+# Set Org1 TLS environment first (required)
+export CORE_PEER_TLS_ENABLED=true
+export CORE_PEER_LOCALMSPID="Org1MSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+export CORE_PEER_ADDRESS=localhost:7051
+
 # Invoke transaction: transfer asset to new owner
 peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com \
-  -C mychannel -n mycc \
-  -c '{"function":"transferAsset","Args":["asset1","Alice"]}' \
-  --peerAddresses localhost:7051 --tlsRootCertFiles ${PEER0_ORG1_TLSCERTFILE} \
-  --peerAddresses localhost:9051 --tlsRootCertFiles ${PEER0_ORG2_TLSCERTFILE}
+  --tls --cafile "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
+  -C mychannel -n myasset \
+  -c '{"function":"TransferAsset","Args":["asset1","Alice"]}' \
+  --peerAddresses localhost:7051 --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt"
 
 # Query transaction: read asset state
-peer chaincode query -C mychannel -n mycc \
-  -c '{"function":"readAsset","Args":["asset1"]}'
+peer chaincode query -C mychannel -n myasset \
+  -c '{"Args":["ReadAsset","asset1"]}'
 ```
 
 ---

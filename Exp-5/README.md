@@ -32,7 +32,7 @@ Exp-5/
 │       ├── package.json        # Chaincode npm manifest
 │       ├── index.js            # Chaincode entry point
 │       └── lib/
-│           └── myAsset.js      # Asset management chaincode (7 functions)
+│           └── myAsset.js      # Asset management chaincode (8 functions)
 ├── screenshots/                # Output screenshots (saved after running the experiment)
 ├── .nvmrc                      # Node version pin (20 — mandatory for Fabric)
 ├── EXP-5_PLAN.md               # Implementation plan
@@ -66,7 +66,7 @@ curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/ins
 Add Fabric binaries to PATH:
 
 ```bash
-export PATH=$PATH:$HOME/fabric-samples/bin
+export PATH=$HOME/fabric-samples/bin:$PATH
 export FABRIC_CFG_PATH=$HOME/fabric-samples/config/
 ```
 
