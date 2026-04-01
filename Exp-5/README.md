@@ -32,11 +32,15 @@ Exp-5/
 │       ├── package.json        # Chaincode npm manifest
 │       ├── index.js            # Chaincode entry point
 │       └── lib/
-│           └── myAsset.js      # Asset management chaincode
-├── test-network/               # Reference to Fabric test network (external)
-├── .nvmrc                      # Node version (20 — for Fabric compatibility)
+│           └── myAsset.js      # Asset management chaincode (7 functions)
+├── screenshots/                # Output screenshots (saved after running the experiment)
+├── .nvmrc                      # Node version pin (20 — mandatory for Fabric)
+├── EXP-5_PLAN.md               # Implementation plan
+├── EXP-5_DOC.md                # College evaluation file (written after experiment)
 └── README.md                   # This file
 ```
+
+> **External dependency**: `~/fabric-samples/` is installed outside this repository (see Prerequisites).
 
 ## Prerequisites
 
@@ -89,7 +93,12 @@ Expected output: `Channel 'mychannel' joined`
 
 ```bash
 # From the blockchain-lab project root:
-cp -r Exp-5/chaincode/javascript ~/fabric-samples/chaincode/myasset/javascript
+mkdir -p ~/fabric-samples/chaincode/myasset/javascript
+cp -r Exp-5/chaincode/javascript/. ~/fabric-samples/chaincode/myasset/javascript/
+
+# Verify the copy
+ls ~/fabric-samples/chaincode/myasset/javascript/
+# Expected: index.js  lib  package.json
 ```
 
 ### Step 3: Install Chaincode Dependencies
@@ -101,6 +110,29 @@ npm install
 ```
 
 ### Step 4: Deploy (Package, Install, Approve, Commit) Chaincode
+
+#### Option A — Recommended: Use `deployCC` shortcut (automated lifecycle)
+
+```bash
+cd ~/fabric-samples/test-network
+
+./network.sh deployCC -ccn myasset \
+  -ccp ../chaincode/myasset/javascript \
+  -ccl javascript \
+  -ccv 1.0 \
+  -ccs 1
+```
+
+This single command handles the full lifecycle: packages, installs on both peers, approves for Org1 and Org2, and commits the chaincode definition to `mychannel`.
+
+Expected output:
+```
+Committing chaincode definition myasset on channel 'mychannel'
+... status:200
+Chaincode definition committed on channel 'mychannel'
+```
+
+#### Option B — Manual lifecycle (for learning purposes)
 
 ```bash
 cd ~/fabric-samples/test-network
@@ -121,12 +153,11 @@ peer lifecycle chaincode package myasset.tar.gz \
 # Install on Org1 peer
 peer lifecycle chaincode install myasset.tar.gz
 
-# Get the package ID (copy from output)
+# Get the package ID and store it
+export PACKAGE_ID=$(peer lifecycle chaincode calculatepackageid myasset.tar.gz)
 peer lifecycle chaincode queryinstalled
 
-# Approve and commit (use the PACKAGE_ID from above)
-export PACKAGE_ID=<paste_package_id_here>
-
+# Approve for Org1
 peer lifecycle chaincode approveformyorg \
   -o localhost:7050 \
   --ordererTLSHostnameOverride orderer.example.com \
@@ -137,6 +168,33 @@ peer lifecycle chaincode approveformyorg \
   --sequence 1 \
   --tls --cafile "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
 
+# Switch to Org2 peer environment
+export CORE_PEER_LOCALMSPID="Org2MSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp
+export CORE_PEER_ADDRESS=localhost:9051
+
+# Install on Org2 peer
+peer lifecycle chaincode install myasset.tar.gz
+
+# Approve for Org2
+peer lifecycle chaincode approveformyorg \
+  -o localhost:7050 \
+  --ordererTLSHostnameOverride orderer.example.com \
+  --channelID mychannel \
+  --name myasset \
+  --version 1.0 \
+  --package-id $PACKAGE_ID \
+  --sequence 1 \
+  --tls --cafile "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+
+# Switch back to Org1 for commit (requires BOTH peer addresses)
+export CORE_PEER_LOCALMSPID="Org1MSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+export CORE_PEER_ADDRESS=localhost:7051
+
+# Commit chaincode definition (MUST include both Org1 and Org2 peer addresses)
 peer lifecycle chaincode commit \
   -o localhost:7050 \
   --ordererTLSHostnameOverride orderer.example.com \
@@ -146,29 +204,64 @@ peer lifecycle chaincode commit \
   --sequence 1 \
   --tls --cafile "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
   --peerAddresses localhost:7051 \
-  --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt"
+  --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt" \
+  --peerAddresses localhost:9051 \
+  --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt"
 ```
+
+> **Note:** The `commit` command **must** include `--peerAddresses` for **both** Org1 (port 7051) and Org2 (port 9051). Omitting Org2 causes an endorsement policy failure even if both organizations approved.
 
 ### Step 5: Invoke and Query Chaincode
 
+> Make sure the Org1 TLS env vars are set before running peer commands (see Step 4 — Option B or re-export from the `deployCC` session).
+
 ```bash
-# Invoke — create an asset
+# 1. Initialize the ledger with 6 sample assets
 peer chaincode invoke \
   -o localhost:7050 \
   --ordererTLSHostnameOverride orderer.example.com \
   --tls \
-  --cafile "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
-  -C mychannel \
-  -n myasset \
+  --cafile "${HOME}/fabric-samples/test-network/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
+  -C mychannel -n myasset \
   --peerAddresses localhost:7051 \
-  --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt" \
-  -c '{"function":"CreateAsset","Args":["asset1","blue","5","Tom","1300"]}'
+  --tlsRootCertFiles "${HOME}/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt" \
+  -c '{"function":"InitLedger","Args":[]}'
 
-# Query — read the asset
-peer chaincode query \
-  -C mychannel \
-  -n myasset \
-  -c '{"Args":["ReadAsset","asset1"]}'
+# 2. Query all assets (should return 6 assets)
+peer chaincode query -C mychannel -n myasset \
+  -c '{"Args":["GetAllAssets"]}'
+
+# 3. Create a new asset
+peer chaincode invoke \
+  -o localhost:7050 \
+  --ordererTLSHostnameOverride orderer.example.com \
+  --tls \
+  --cafile "${HOME}/fabric-samples/test-network/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
+  -C mychannel -n myasset \
+  --peerAddresses localhost:7051 \
+  --tlsRootCertFiles "${HOME}/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt" \
+  -c '{"function":"CreateAsset","Args":["asset7","purple","20","Pratham","1500"]}'
+
+# 4. Read the new asset
+peer chaincode query -C mychannel -n myasset \
+  -c '{"Args":["ReadAsset","asset7"]}'
+# Expected: {"AppraisedValue":1500,"Color":"purple","ID":"asset7","Owner":"Pratham","Size":20}
+
+# 5. Transfer asset7 to a new owner
+peer chaincode invoke \
+  -o localhost:7050 \
+  --ordererTLSHostnameOverride orderer.example.com \
+  --tls \
+  --cafile "${HOME}/fabric-samples/test-network/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
+  -C mychannel -n myasset \
+  --peerAddresses localhost:7051 \
+  --tlsRootCertFiles "${HOME}/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt" \
+  -c '{"function":"TransferAsset","Args":["asset7","Christopher"]}'
+
+# 6. Confirm ownership transfer
+peer chaincode query -C mychannel -n myasset \
+  -c '{"Args":["ReadAsset","asset7"]}'
+# Expected: "Owner":"Christopher"
 ```
 
 ### Step 6: Tear Down the Network
@@ -189,10 +282,26 @@ Anchor peer set for org 'Org2MSP' on channel 'mychannel'
 Channel 'mychannel' joined
 ```
 
-After query:
+After `GetAllAssets` (post `InitLedger`):
 
 ```json
-{"AppraisedValue":1300,"Color":"blue","ID":"asset1","Owner":"Tom","Size":5}
+[
+  {"AppraisedValue":300,"Color":"blue","ID":"asset1","Owner":"Tomoko","Size":5,"docType":"asset"},
+  {"AppraisedValue":400,"Color":"red","ID":"asset2","Owner":"Brad","Size":5,"docType":"asset"},
+  ...
+]
+```
+
+After `ReadAsset asset7` (post `CreateAsset`):
+
+```json
+{"AppraisedValue":1500,"Color":"purple","ID":"asset7","Owner":"Pratham","Size":20}
+```
+
+After `ReadAsset asset7` (post `TransferAsset`):
+
+```json
+{"AppraisedValue":1500,"Color":"purple","ID":"asset7","Owner":"Christopher","Size":20}
 ```
 
 ## References
