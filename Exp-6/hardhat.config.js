@@ -1,7 +1,7 @@
-require("dotenv").config();
+import "dotenv/config";
 
 /** @type {import('hardhat/config').HardhatUserConfig} */
-module.exports = {
+const config = {
   solidity: {
     version: "0.8.26",
     settings: {
@@ -15,11 +15,15 @@ module.exports = {
   networks: {
     // Local Hardhat ephemeral network
     hardhat: {
+      type: "edr-simulated",
+      chainType: "l1",
       chainId: 31337,
     },
 
     // Anvil — Foundry's local node (mirrors Hardhat node)
     anvil: {
+      type: "http",
+      chainType: "l1",
       url: "http://127.0.0.1:8545",
       chainId: 31337,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
@@ -27,6 +31,8 @@ module.exports = {
 
     // Ethereum Sepolia Testnet
     sepolia: {
+      type: "http",
+      chainType: "l1",
       url:
         process.env.ALCHEMY_API_URL_SEPOLIA ||
         (process.env.ALCHEMY_API_KEY
@@ -51,8 +57,10 @@ module.exports = {
   // Named paths (mirrors Foundry src/test layout)
   paths: {
     sources: "./src",
-    tests: "./test",
+    tests: "./test_hh",
     cache: "./cache_hh",
     artifacts: "./artifacts",
   },
 };
+
+export default config;
