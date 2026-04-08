@@ -1,6 +1,7 @@
 {
   "name": "exp-6",
   "version": "1.0.0",
+  "type": "module",
   "description": "Mini Project — Full-fledged DApp using Ethereum (Foundry + Hardhat 3) — LO6",
   "main": "index.js",
   "scripts": {
@@ -16,8 +17,18 @@
     "deploy:local": "npx hardhat run scripts/deploy.js --network hardhat",
     "deploy:anvil": "npx hardhat run scripts/deploy.js --network anvil",
     "deploy:sepolia": "npx hardhat run scripts/deploy.js --network sepolia",
-    "deploy:forge:anvil": "forge script script/Counter.s.sol --rpc-url http://127.0.0.1:8545 --broadcast",
-    "deploy:forge:sepolia": "forge script script/Counter.s.sol --rpc-url sepolia --broadcast --verify",
+    "deploy:forge:anvil": "forge script script/DeployDVote.s.sol --rpc-url http://127.0.0.1:8545 --broadcast",
+    "deploy:forge:sepolia": "forge script script/DeployDVote.s.sol --rpc-url sepolia --broadcast --verify",
+    "bootstrap:forge:anvil": "forge script script/BootstrapElection.s.sol --rpc-url http://127.0.0.1:8545 --broadcast",
+    "bootstrap:forge:sepolia": "forge script script/BootstrapElection.s.sol --rpc-url sepolia --broadcast",
+    "finalize:forge:anvil": "forge script script/FinalizeElection.s.sol --rpc-url http://127.0.0.1:8545 --broadcast",
+    "finalize:forge:sepolia": "forge script script/FinalizeElection.s.sol --rpc-url sepolia --broadcast",
+    "rerun:forge:anvil": "forge script script/CreateRerunElection.s.sol --rpc-url http://127.0.0.1:8545 --broadcast",
+    "rerun:forge:sepolia": "forge script script/CreateRerunElection.s.sol --rpc-url sepolia --broadcast",
+    "rotate:forge:anvil": "forge script script/RotateKycSigner.s.sol --rpc-url http://127.0.0.1:8545 --broadcast",
+    "rotate:forge:sepolia": "forge script script/RotateKycSigner.s.sol --rpc-url sepolia --broadcast",
+    "postcheck:forge:anvil": "forge script script/PostDeployCheck.s.sol --rpc-url http://127.0.0.1:8545",
+    "postcheck:forge:sepolia": "forge script script/PostDeployCheck.s.sol --rpc-url sepolia",
     "verify:sepolia": "npx hardhat verify --network sepolia",
     "clean": "npx hardhat clean && forge clean",
     "format": "forge fmt && npx prettier --write 'scripts/**/*.js' 'test/**/*.js'"
@@ -33,6 +44,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
     "dotenv": "^17.3.1",
     "hardhat": "^3.1.9",
     "prettier": "^3.8.1",
