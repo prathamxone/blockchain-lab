@@ -38,6 +38,14 @@ export function createApp() {
   app.use(cookieParser());
   app.use(healthRouter);
 
+  app.get("/", (_req, res) => {
+    res.status(200).json({
+      status: "ok",
+      service: "dvote-backend",
+      health: "/health"
+    });
+  });
+
   app.use(env.API_BASE_PATH, globalApiIpRateLimit);
   app.use(env.API_BASE_PATH, authRouter);
   app.use(env.API_BASE_PATH, uploadsRouter);
@@ -60,3 +68,7 @@ export function createApp() {
 
   return app;
 }
+
+const app = createApp();
+
+export default app;

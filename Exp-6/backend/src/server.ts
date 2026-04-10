@@ -1,11 +1,10 @@
 import { createServer } from "node:http";
 
-import { createApp } from "./app.js";
+import app from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
 import { bootstrapRoleWallets } from "./roles/role-bootstrap.service.js";
 
-const app = createApp();
 const server = createServer(app);
 
 async function startServer(): Promise<void> {
