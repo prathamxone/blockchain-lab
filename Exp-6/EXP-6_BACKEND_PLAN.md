@@ -851,6 +851,11 @@ if (existing && existing.payloadHash !== incomingHash) {
 - Integration contracts are explicit and unambiguous.
 - No undocumented required env key remains.
 
+**Phase 19 Execution Checkpoint (2026-04-10)**:
+1. `backend/README.md` was created and aligned to implemented runtime, command matrix, API envelope, endpoint matrix, and strict preview smoke token workflow.
+2. `backend/.env.example` was updated with optional signer-key placeholders and explicit strict-preview token contract notes.
+3. Env-key parity was revalidated against direct `process.env` usage in backend source and smoke scripts; no undocumented required key remains.
+
 ---
 
 ### Phase 20 - Final Hygiene and Plan Lock
