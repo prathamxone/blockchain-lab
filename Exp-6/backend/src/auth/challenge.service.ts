@@ -76,26 +76,45 @@ async function readLockStatus(wallet: string, sourceIp: string): Promise<LockSta
   };
 }
 
-function parseChallenge(raw: string): ChallengeRecord | null {
-  try {
-    const parsed = JSON.parse(raw) as ChallengeRecord;
-    if (
-      typeof parsed.challengeId !== "string" ||
-      typeof parsed.wallet !== "string" ||
-      typeof parsed.chainId !== "number" ||
-      typeof parsed.nonce !== "string" ||
-      typeof parsed.message !== "string" ||
-      typeof parsed.issuedAt !== "string" ||
-      typeof parsed.expiresAt !== "string" ||
-      typeof parsed.walletDigest !== "string"
-    ) {
+function parseChallenge(raw: unknown): ChallengeRecord | null {
+  let candidate: unknown = raw;
+
+  if (typeof raw === "string") {
+    try {
+      candidate = JSON.parse(raw) as unknown;
+    } catch {
       return null;
     }
+  }
 
-    return parsed;
-  } catch {
+  if (!candidate || typeof candidate !== "object") {
     return null;
   }
+
+  const parsed = candidate as Partial<ChallengeRecord>;
+  if (
+    typeof parsed.challengeId !== "string" ||
+    typeof parsed.wallet !== "string" ||
+    typeof parsed.chainId !== "number" ||
+    typeof parsed.nonce !== "string" ||
+    typeof parsed.message !== "string" ||
+    typeof parsed.issuedAt !== "string" ||
+    typeof parsed.expiresAt !== "string" ||
+    typeof parsed.walletDigest !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    challengeId: parsed.challengeId,
+    wallet: parsed.wallet,
+    chainId: parsed.chainId,
+    nonce: parsed.nonce,
+    message: parsed.message,
+    issuedAt: parsed.issuedAt,
+    expiresAt: parsed.expiresAt,
+    walletDigest: parsed.walletDigest
+  };
 }
 
 export const challengeService = {
@@ -161,7 +180,7 @@ export const challengeService = {
 
   async loadChallenge(challengeId: string): Promise<AuthChallenge | null> {
     try {
-      const raw = await redis.get<string>(challengeKey(challengeId));
+      const raw = await redis.get(challengeKey(challengeId));
       if (!raw) {
         return null;
       }
