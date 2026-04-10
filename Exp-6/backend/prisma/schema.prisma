@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum RoleName {
+  ADMIN
+  ECI
+  SRO
+  RO
+  OBSERVER
+  VOTER
+  KYC_SIGNER
+  EMERGENCY
+}
+
+enum KycState {
+  DRAFT
+  SUBMITTED
+  QUEUED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  NEEDS_RESUBMISSION
+  ON_CHAIN_ATTESTED
+  ELIGIBLE
+}
+
+enum VoteRelayState {
+  CREATED
+  VALIDATED
+  SUBMITTED_TO_CHAIN
+  CONFIRMED
+  FAILED
+  EXPIRED
+  CONFLICT
+  TIMEOUT_UNCERTAIN
+}
+
+enum FreshnessState {
+  FRESH
+  STALE
+  DEGRADED
+}
+
+enum UploadArtifactType {
+  DOCUMENT
+  PROFILE_PHOTO
+}
+
+enum ScanState {
+  PENDING
+  CLEAN
+  REJECTED
+}
+
+enum WalletGovernanceStateType {
+  WALLET_MISMATCH_LOCKED
+  WALLET_SWITCH_PENDING_APPROVAL
+  WALLET_SWITCH_APPROVED_AWAITING_ONCHAIN_REBIND
+  WALLET_SWITCH_REJECTED
+}
+
+model RoleWallet {
+  id          String   @id @default(cuid())
+  wallet      String   @unique
+  role        RoleName
+  source      String
+  active      Boolean  @default(true)
+  bootstrappedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SessionState {
+  id               String   @id @default(cuid())
+  sessionId        String   @unique
+  wallet           String
+  refreshFamilyId  String
+  lastActivityAt   DateTime
+  expiresAt        DateTime
+  resumableState   Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([wallet])
+  @@index([expiresAt])
+}
+
+model KycSubmission {
+  id                       String    @id @default(cuid())
+  wallet                   String
+  electionId               String
+  constituencyId           String
+  state                    KycState  @default(DRAFT)
+  encryptedPayload         String?
+  encryptedDek             String?
+  iv                       String?
+  authTag                  String?
+  keyVersion               String?
+  aadhaarHash              String?
+  epicHash                 String?
+  isAadhaarOnly            Boolean   @default(false)
+  reasonCodeHash           String?
+  uploadFinalizedAt        DateTime?
+  submittedAt              DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  @@index([wallet, electionId])
+  @@index([constituencyId, electionId, submittedAt])
+}
+
+model KycQueueItem {
+  id              String   @id @default(cuid())
+  submissionId    String   @unique
+  electionId      String
+  constituencyId  String
+  sequenceNo      Int
+  reviewerWallet  String?
+  createdAt       DateTime @default(now())
+
+  @@unique([electionId, constituencyId, sequenceNo])
+  @@index([electionId, constituencyId, createdAt])
+}
+
+model UploadArtifact {
+  id                String           @id @default(cuid())
+  submissionId      String
+  wallet            String
+  electionId        String
+  constituencyId    String
+  artifactType      UploadArtifactType
+  objectKey         String           @unique
+  mimeType          String
+  fileSizeBytes     Int
+  checksumSha256Hex String?
+  scanState         ScanState        @default(PENDING)
+  scanQueuedAt      DateTime?
+  finalizedAt       DateTime?
+  contractExpiresAt DateTime
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([submissionId, artifactType])
+  @@index([electionId, constituencyId, scanState])
+}
+
+model ElectionMirror {
+  id                     String        @id @default(cuid())
+  electionId             String        @unique
+  status                 String
+  parentElectionId       String?
+  childElectionId        String?
+  finalizationOutcome    String?
+  rerunRequiredAt        DateTime?
+  rerunDeadline          DateTime?
+  rerunSlaState          String?
+  freshnessState         FreshnessState @default(FRESH)
+  lastSyncedAt           DateTime?
+  contestingCandidateCap Int           @default(15)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+}
+
+model VoteToken {
+  id          String   @id @default(cuid())
+  tokenHash   String   @unique
+  wallet      String
+  electionId  String
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([wallet, electionId])
+}
+
+model VoteIntent {
+  id            String        @id @default(cuid())
+  dedupeKey     String        @unique
+  wallet        String
+  electionId    String
+  clientNonce   String
+  payloadHash   String
+  relayState    VoteRelayState @default(CREATED)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([wallet, electionId, clientNonce])
+}
+
+model VoteRelay {
+  id            String        @id @default(cuid())
+  voteIntentId  String        @unique
+  txHash        String?
+  relayState    VoteRelayState @default(CREATED)
+  failureCode   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  wallet      String
+  category    String
+  priority    String
+  payload     Json
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+
+  @@index([wallet, isRead, createdAt])
+}
+
+model WalletGovernanceState {
+  id                      String                    @id @default(cuid())
+  wallet                  String                    @unique
+  role                    RoleName
+  state                   WalletGovernanceStateType
+  mismatchContext         String?
+  pendingTargetWallet     String?
+  pendingApprovalTicketId String?
+  reviewedAt              DateTime?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+
+  @@index([role, state, updatedAt])
+}
+
+model ObserverAnomaly {
+  id               String   @id @default(cuid())
+  reportedByWallet String
+  electionId       String
+  constituencyId   String?
+  category         String
+  detail           String
+  status           String   @default("OPEN")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([electionId, category, createdAt])
+  @@index([reportedByWallet, createdAt])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorWallet   String?
+  action        String
+  entityType    String
+  entityId      String
+  payload       Json
+  previousHash  String?
+  entryHash     String
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+}
+
+model RerunEscalationTicket {
+  id              String   @id @default(cuid())
+  electionId      String
+  createdByWallet String
+  createdByRole   RoleName
+  reasonCategory  String
+  reasonNote      String
+  evidenceHashRef String
+  status          String
+  resolvedAt      DateTime?
+  resolvedByWallet String?
+  createdAt       DateTime @default(now())
+
+  @@index([electionId, status, createdAt])
+}
