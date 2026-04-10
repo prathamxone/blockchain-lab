@@ -1,5 +1,22 @@
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+export function resolveOptionalInput(value) {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return undefined;
+  }
+
+  if (normalized.startsWith("__MANUAL_") || normalized.startsWith("__AUTO_")) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
 function joinUrl(baseUrl, path) {
   const left = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
   const right = path.startsWith("/") ? path : `/${path}`;

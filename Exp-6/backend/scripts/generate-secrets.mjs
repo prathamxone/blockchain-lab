@@ -13,6 +13,14 @@ const REQUIRED_SECRETS = [
   "KYC_ENC_KEY_V1_BASE64"
 ];
 
+const SMOKE_ENV_DEFAULTS = {
+  SMOKE_LOCAL_BASE_URL: "http://localhost:4000",
+  SMOKE_LOCAL_AUTH_BEARER: "__MANUAL_LOCAL_ACCESS_TOKEN__",
+  SMOKE_PREVIEW_BASE_URL: "http://localhost:4000",
+  SMOKE_PREVIEW_BEARER_TOKEN: "__MANUAL_PREVIEW_BEARER_TOKEN__",
+  SMOKE_PREVIEW_AUTH_BEARER: "__MANUAL_PREVIEW_ACCESS_TOKEN__"
+};
+
 function runOpenSsl(command) {
   try {
     return execSync(command, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
@@ -41,6 +49,13 @@ function buildSecrets() {
   };
 }
 
+function buildEnvValues() {
+  return {
+    ...buildSecrets(),
+    ...SMOKE_ENV_DEFAULTS
+  };
+}
+
 function applyToEnvFile(envPath, secrets) {
   const original = existsSync(envPath) ? readFileSync(envPath, "utf8") : "";
   const lines = original.length > 0 ? original.split(/\r?\n/) : [];
@@ -65,19 +80,24 @@ function printSecrets(secrets) {
     console.log(`${key}=${secrets[key]}`);
   }
 
+  console.log("\nSmoke env defaults:\n");
+  for (const [key, value] of Object.entries(SMOKE_ENV_DEFAULTS)) {
+    console.log(`${key}=${value}`);
+  }
+
   console.log("\nVercel CLI helpers (run per target):");
   console.log("vercel env add JWT_ACCESS_SECRET production");
   console.log("vercel env add JWT_ACCESS_SECRET preview");
   console.log("vercel env add JWT_ACCESS_SECRET development");
 }
 
-const secrets = buildSecrets();
+const envValues = buildEnvValues();
 const shouldApply = process.argv.includes("--apply");
 
 if (shouldApply) {
   const envPath = join(process.cwd(), ".env");
-  applyToEnvFile(envPath, secrets);
-  console.log(`Applied ${REQUIRED_SECRETS.length} generated secrets to ${envPath}`);
+  applyToEnvFile(envPath, envValues);
+  console.log(`Applied ${Object.keys(envValues).length} generated/default env values to ${envPath}`);
 } else {
-  printSecrets(secrets);
+  printSecrets(envValues);
 }
