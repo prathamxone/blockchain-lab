@@ -1,4 +1,4 @@
-FILE_LENGTH_TAG=medium
+FILE_LENGTH_TAG=medium (revalidated 2026-04-10: 1716 lines)
 
 # EXP-6_BACKEND_PLAN - DVote (MVP + Backend) Extensive Development Plan
 
@@ -58,7 +58,7 @@ FILE_LENGTH_TAG=medium
 | Voter Aadhaar-only Rule | Allowed with stricter review + reason code + additional evidence |
 | Prerequisite Experiments | Exp-1 to Exp-4 (Ethereum track), Exp-6 Foundry plan parity |
 | Estimated Phases | 20 phases |
-| FILE_LENGTH_TAG | medium (revalidated after full file completion) |
+| FILE_LENGTH_TAG | medium (revalidated 2026-04-10 at 1716 lines) |
 
 ### 0.1 Network and Deployment Awareness Table
 
@@ -876,6 +876,22 @@ if (existing && existing.payloadHash !== incomingHash) {
 - Quality gates pass with clean final state.
 - Plan reflects final backend architecture and locked policy decisions.
 - FILE_LENGTH_TAG is revalidated using actual line count.
+
+**Phase 20 Execution Checkpoint (2026-04-10)**:
+1. Quality gates rerun and passed:
+  - `npm run build` passed.
+  - `npm test` passed (`23/23` tests).
+  - strict local smoke passed with real auth bearer (`system freshness` included).
+  - strict preview smoke passed with real auth bearer (`system freshness` included).
+2. Hygiene checks passed:
+  - `git status --short` clean after Phase 19 commit.
+  - no secret-bearing files staged.
+3. Plan and runbook lock check passed:
+  - `backend/README.md`, `backend/package.json`, and `backend/vercel.json` verified against implemented contracts.
+4. Line-count revalidation completed:
+  - `EXP-6_BACKEND_PLAN.md` now at 1716 lines.
+  - `FILE_LENGTH_TAG` remains `medium` and is now timestamped.
+5. Deferred items are frozen under Section 9.2 for post-MVP carry-over.
 
 ---
 
