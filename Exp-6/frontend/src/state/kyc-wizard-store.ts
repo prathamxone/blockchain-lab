@@ -20,11 +20,28 @@
  * Form data is held in-memory only (never localStorage/sessionStorage — L-B1).
  * On session clear, the wizard state is reset.
  *
- * Authority: walkthrough Phase K, CDM-7, CDM-10, FEATURE_FRONTEND §6.5
+ * Authority: walkthrough Phase K+L, CDM-7, CDM-10, CDM-11, FEATURE_FRONTEND §6.5
  */
 
 import { create } from "zustand"
 import type { KycStatus } from "@/lib/format/mask"
+
+// ─── Upload artifact tracking (CDM-11) ───────────────────────────────────────
+
+/**
+ * Represents a finalize-bound upload artifact.
+ * Only artifacts with status="scan-pending" (finalized) count toward CDM-11 gate.
+ */
+export interface UploadArtifactRecord {
+  /** artifactId from POST /uploads/finalize response */
+  artifactId: string
+  /** objectKey from POST /uploads/finalize response */
+  objectKey: string
+  /** "DOCUMENT" | "PROFILE_PHOTO" */
+  artifactType: "DOCUMENT" | "PROFILE_PHOTO"
+  /** Original filename for display */
+  fileName: string
+}
 
 // ─── KYC Wizard step numbering ────────────────────────────────────────────────
 
@@ -78,6 +95,12 @@ export interface KycWizardFormData {
   step3: ProfileData
   /** Upload artifact IDs from Step 4 (finalized in Phase L) */
   additionalEvidenceRefs: string[]
+  /**
+   * Phase L upload artifacts — CDM-11 finalize-bind tracking.
+   * Each entry represents a confirmed finalize-bound artifact.
+   * Submit MUST remain disabled until required artifacts are here.
+   */
+  uploadArtifacts: UploadArtifactRecord[]
 }
 
 // ─── Draft metadata ───────────────────────────────────────────────────────────
@@ -146,8 +169,19 @@ interface KycWizardStoreActions {
   /** Update Step 3 form data */
   updateStep3: (data: Partial<ProfileData>) => void
 
-  /** Update additionalEvidenceRefs (Phase L) */
+  /** Update additionalEvidenceRefs (Phase L — legacy compat) */
   setEvidenceRefs: (refs: string[]) => void
+
+  // ── Phase L: CDM-11 upload artifact actions ──────────────────────────────
+
+  /** Add a finalize-bound artifact to the store (CDM-11 gate) */
+  addUploadArtifact: (artifact: UploadArtifactRecord) => void
+
+  /** Remove an artifact by artifactId (on user removing uploaded file) */
+  removeUploadArtifact: (artifactId: string) => void
+
+  /** Clear all upload artifacts (on wizard reset or re-auth) */
+  clearUploadArtifacts: () => void
 
   /** Set the server draft metadata (from GET /kyc/me response) */
   setServerDraft: (meta: ServerDraftMeta) => void
@@ -180,6 +214,7 @@ const DEFAULT_FORM_DATA: KycWizardFormData = {
   step2: { aadhaar: "", epic: "", isAadhaarOnly: false, reasonCode: "" },
   step3: { fullName: "", dateOfBirth: "", addressLine1: "", addressLine2: "", city: "", state: "", pincode: "" },
   additionalEvidenceRefs: [],
+  uploadArtifacts: [],
 }
 
 // ─── Initial store state ──────────────────────────────────────────────────────
@@ -243,6 +278,34 @@ export const useKycWizardStore = create<KycWizardStore>((set) => ({
       formData: { ...s.formData, additionalEvidenceRefs: refs },
     })),
 
+  addUploadArtifact: (artifact) =>
+    set((s) => ({
+      formData: {
+        ...s.formData,
+        uploadArtifacts: [...s.formData.uploadArtifacts, artifact],
+        // Keep additionalEvidenceRefs in sync for backward compat with KycWizardPage submit
+        additionalEvidenceRefs: [...s.formData.additionalEvidenceRefs, artifact.artifactId],
+      },
+    })),
+
+  removeUploadArtifact: (artifactId) =>
+    set((s) => ({
+      formData: {
+        ...s.formData,
+        uploadArtifacts: s.formData.uploadArtifacts.filter((a) => a.artifactId !== artifactId),
+        additionalEvidenceRefs: s.formData.additionalEvidenceRefs.filter((id) => id !== artifactId),
+      },
+    })),
+
+  clearUploadArtifacts: () =>
+    set((s) => ({
+      formData: {
+        ...s.formData,
+        uploadArtifacts: [],
+        additionalEvidenceRefs: [],
+      },
+    })),
+
   setServerDraft: (meta) =>
     set({
       serverDraftMeta: meta,
@@ -288,3 +351,23 @@ export const useKycWizardStore = create<KycWizardStore>((set) => ({
 
 /** Reset wizard state imperatively (e.g. on session clear in auth-store). */
 export const resetKycWizard = (): void => useKycWizardStore.getState().resetWizard()
+
+// ─── CDM-11 computed helpers ──────────────────────────────────────────────────
+
+/**
+ * Returns true when all required upload artifacts are finalize-bound.
+ * For Aadhaar-only path: at least 1 artifact is required.
+ * For standard path: 0 artifacts needed (upload is optional).
+ *
+ * CDM-11: Submit gate — caller must check this before enabling submit.
+ */
+export function allArtifactsFinalized(
+  isAadhaarOnly: boolean,
+  uploadArtifacts: UploadArtifactRecord[]
+): boolean {
+  if (isAadhaarOnly) {
+    return uploadArtifacts.length >= 1
+  }
+  // Standard path: no upload required (any uploaded = bonus)
+  return true
+}

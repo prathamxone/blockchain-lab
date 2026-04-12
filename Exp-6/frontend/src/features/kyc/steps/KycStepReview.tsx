@@ -17,8 +17,9 @@
  *   1. All required fields present (canonical validation)
  *   2. useSensitiveActionGate: not blocked (freshness degraded = CDM-9)
  *   3. isSubmitting: false (prevents double-submit)
+ *   4. CDM-11: all required artifacts finalize-bound (Aadhaar-only path: ≥1)
  *
- * Authority: walkthrough Phase K, L-C2, CDM-9, CDM-10
+ * Authority: walkthrough Phase K+L, L-C2, CDM-9, CDM-10, CDM-11
  */
 
 import { CheckCircle2, AlertCircle } from "lucide-react"
@@ -35,7 +36,7 @@ import {
   kycStatusLabel,
   AADHAAR_ONLY_REASON_CODES,
 } from "@/lib/format/mask"
-import { useKycWizardStore } from "@/state/kyc-wizard-store"
+import { useKycWizardStore, allArtifactsFinalized } from "@/state/kyc-wizard-store"
 import { useSensitiveActionGate } from "@/hooks/useSensitiveActionGate"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -91,6 +92,11 @@ export function KycStepReview({ onBack, onSubmit }: KycStepReviewProps) {
   const { isBlocked: isFreshnessBlocked, reason: freshnessReason } = useSensitiveActionGate()
 
   const { step1, step2, step3 } = formData
+  const uploadArtifacts = formData.uploadArtifacts
+
+  // CDM-11: all required artifacts finalize-bound?
+  const allArtifactsOk = allArtifactsFinalized(step2.isAadhaarOnly, uploadArtifacts)
+  const artifactsBlocked = !allArtifactsOk
 
   // Derived display values
   const participantLabel = step1.participantType === "CANDIDATE" ? "Candidate" : "Voter"
@@ -126,6 +132,7 @@ export function KycStepReview({ onBack, onSubmit }: KycStepReviewProps) {
     epicValid &&
     profileValid &&
     !candidateEpicMissing &&
+    !artifactsBlocked &&
     !isFreshnessBlocked &&
     !isSubmitting
 
@@ -207,6 +214,25 @@ export function KycStepReview({ onBack, onSubmit }: KycStepReviewProps) {
           />
           <ReviewRow label="Address" value={fullAddress} />
         </div>
+
+        {/* Upload artifacts (Phase L) */}
+        {uploadArtifacts.length > 0 && (
+          <>
+            <Separator />
+            <div className="py-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground pt-3 pb-1">
+                Uploaded Evidence
+              </p>
+              {uploadArtifacts.map((a) => (
+                <ReviewRow
+                  key={a.artifactId}
+                  label={a.artifactType === "PROFILE_PHOTO" ? "Profile Photo" : "Evidence Document"}
+                  value={`${a.fileName} (scan-pending)`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </dl>
 
       {/* Candidate EPIC missing error */}
@@ -220,6 +246,21 @@ export function KycStepReview({ onBack, onSubmit }: KycStepReviewProps) {
             <span className="font-semibold">Cannot submit:</span> Candidate KYC
             requires a valid EPIC voter ID. Please go back to Step 2 and enter
             your EPIC number.
+          </p>
+        </div>
+      )}
+
+      {/* CDM-11: upload not finalized error */}
+      {artifactsBlocked && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-destructive text-sm"
+        >
+          <AlertCircle className="size-4 shrink-0 mt-0.5" aria-hidden="true" />
+          <p>
+            <span className="font-semibold">Cannot submit:</span> Your Aadhaar-only path
+            requires at least one additional evidence document that is finalize-bound.
+            Please go back to Step 4 and upload a valid document.
           </p>
         </div>
       )}
@@ -272,7 +313,13 @@ export function KycStepReview({ onBack, onSubmit }: KycStepReviewProps) {
           isLoading={isSubmitting}
           disabled={!canSubmit}
           loadingLabel="Submitting…"
-          title={isFreshnessBlocked ? freshnessReason : undefined}
+          title={
+            isFreshnessBlocked
+              ? freshnessReason
+              : artifactsBlocked
+                ? "Upload and bind evidence documents before submitting"
+                : undefined
+          }
         >
           Submit KYC Application
         </LoadingButton>
