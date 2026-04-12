@@ -32,21 +32,25 @@ import type { DVoteRole } from "@/components/layout/Sidebar"
 
 // ─── Backend response shapes ──────────────────────────────────────────────────
 
+// Mirrors POST /auth/refresh response:
+// { accessToken, csrfToken, session: { sessionId, expiresAt } }
 interface RefreshResponse {
   /** New access token returned by POST /auth/refresh */
   accessToken: string
-  /**
-   * Seconds until the NEW access token expires.
-   * Used by useTokenRefresh to schedule proactive refresh.
-   * Stored in module-level ref for cross-hook access.
-   */
-  expiresIn: number
+  csrfToken: string
+  session: {
+    sessionId: string
+    expiresAt: string  // ISO-8601 timestamp when access token expires
+  }
 }
 
+// Mirrors GET /auth/me response:
+// { wallet, role, sessionId, sessionExpiresAt }
 interface AuthMeResponse {
-  walletAddress: string
+  wallet: string       // BUG-FIX: backend returns 'wallet', not 'walletAddress'
   role: DVoteRole
   sessionId: string
+  sessionExpiresAt: string | null
 }
 
 // ─── Module-level expiry tracker ─────────────────────────────────────────────
@@ -98,8 +102,9 @@ export function useSession(): void {
         )
 
         // Store expiry so useTokenRefresh can schedule next proactive refresh
-        if (refreshData.expiresIn) {
-          const expiresAtMs = Date.now() + refreshData.expiresIn * 1000
+        // BUG-FIX: backend returns session.expiresAt (ISO-8601), not expiresIn (seconds)
+        if (refreshData.session?.expiresAt) {
+          const expiresAtMs = new Date(refreshData.session.expiresAt).getTime()
           setAccessTokenExpiresAt(expiresAtMs)
         }
 
@@ -118,7 +123,8 @@ export function useSession(): void {
           accessToken: newAccessToken,
           sessionId: meData.sessionId,
           role: meData.role,
-          walletAddress: meData.walletAddress,
+          // BUG-FIX: backend /auth/me returns 'wallet' not 'walletAddress'
+          walletAddress: meData.wallet,
         })
       } catch {
         // Refresh failed (cookie expired, family revoked, network error, etc.)

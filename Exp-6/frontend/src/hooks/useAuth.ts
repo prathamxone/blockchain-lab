@@ -84,21 +84,38 @@ interface UseAuthReturn {
 }
 
 // ─── Challenge API shape ──────────────────────────────────────────────────────
+// Mirrors backend auth/routes.ts challengeSchema and sendSuccess response.
 
 interface ChallengeResponse {
-  message: string     // canonical message to sign
-  expiresAt: string   // ISO-8601 — for display only (backend enforces TTL)
+  challengeId: string  // UUID — REQUIRED for verify step
+  message: string      // canonical SIWE message to sign
+  nonce: string
+  issuedAt: string     // ISO-8601
+  expiresAt: string    // ISO-8601 — for display only (backend enforces TTL)
 }
 
+// Mirrors backend verifySchema response:
+// { accessToken, csrfToken, user: { wallet, role }, session: { sessionId, expiresAt } }
 interface VerifyResponse {
   accessToken: string
-  sessionId: string
+  csrfToken: string
+  user: {
+    wallet: string
+    role: string
+  }
+  session: {
+    sessionId: string
+    expiresAt: string
+  }
 }
 
+// Mirrors backend GET /auth/me response:
+// { wallet, role, sessionId, sessionExpiresAt }
 interface AuthMeResponse {
-  walletAddress: string
-  role: string         // Backend enum: ADMIN | ECI | SRO | RO | OBSERVER | VOTER | CANDIDATE
+  wallet: string       // NOTE: backend uses 'wallet' not 'walletAddress'
+  role: string         // Backend enum: ADMIN | ECI | SRO | RO | OBSERVER | VOTER
   sessionId: string
+  sessionExpiresAt: string | null
 }
 
 // ─── useAuth hook ─────────────────────────────────────────────────────────────
@@ -159,11 +176,13 @@ export function useAuth(): UseAuthReturn {
       try {
         // ── Step 1: Fetch challenge message ──────────────────────────────────
         setStep("requesting-challenge")
+        // BUG-FIX: backend schema uses 'wallet' + required 'chainId', not 'walletAddress'
         const challengeData = await apiClient.post<ChallengeResponse>(
           "/auth/challenge",
-          { walletAddress: address },
+          { wallet: address, chainId },
+          { skipAuth: true },
         )
-        const { message: challengeMessage } = challengeData
+        const { message: challengeMessage, challengeId } = challengeData
 
         // ── Step 2: Sign message with connected wallet ───────────────────────
         // EOA personal_sign — user approves in wallet UI
@@ -194,8 +213,12 @@ export function useAuth(): UseAuthReturn {
         setStep("verifying")
         let verifyData: VerifyResponse
         try {
+          // BUG-FIX: backend verifySchema requires {wallet, chainId, challengeId, signature}
+          // was: { walletAddress, signature } — missing required chainId + challengeId
           verifyData = await apiClient.post<VerifyResponse>("/auth/verify", {
-            walletAddress: address,
+            wallet: address,
+            chainId,
+            challengeId,
             signature,
           })
         } catch (verifyErr: unknown) {
@@ -216,7 +239,9 @@ export function useAuth(): UseAuthReturn {
           return
         }
 
-        const { accessToken, sessionId } = verifyData
+        const { accessToken } = verifyData
+        // BUG-FIX: sessionId lives in verifyData.session.sessionId, not at top level
+        const { sessionId } = verifyData.session
 
         // ── Step 4: Resolve role from GET /auth/me ───────────────────────────
         // CRITICAL: NEVER read role from JWT payload — always from /auth/me body.
@@ -250,7 +275,8 @@ export function useAuth(): UseAuthReturn {
           accessToken,
           sessionId,
           role: frontendRole,
-          walletAddress: address,
+          // BUG-FIX: backend /auth/me returns 'wallet' not 'walletAddress'
+          walletAddress: meData.wallet,
         })
         setHydrated()
         setStep("success")

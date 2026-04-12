@@ -45,9 +45,15 @@ const MAX_REFRESH_FAILURES = 3
 
 // ─── Backend refresh response shape ──────────────────────────────────────────
 
+// Mirrors backend POST /auth/refresh response:
+// { accessToken, csrfToken, session: { sessionId, expiresAt } }
 interface RefreshResponse {
   accessToken: string
-  expiresIn: number // seconds
+  csrfToken: string
+  session: {
+    sessionId: string
+    expiresAt: string // ISO-8601 — used to schedule next proactive refresh
+  }
 }
 
 // ─── useTokenRefresh hook ─────────────────────────────────────────────────────
@@ -85,8 +91,11 @@ export function useTokenRefresh(): void {
       setAccessToken(data.accessToken)
 
       // Update expiry tracker for next scheduled refresh
-      const newExpiresAtMs = Date.now() + data.expiresIn * 1000
-      setAccessTokenExpiresAt(newExpiresAtMs)
+      // BUG-FIX: backend returns session.expiresAt (ISO-8601), not expiresIn (seconds)
+      if (data.session?.expiresAt) {
+        const newExpiresAtMs = new Date(data.session.expiresAt).getTime()
+        setAccessTokenExpiresAt(newExpiresAtMs)
+      }
 
       // Reset failure counter on success
       failureCountRef.current = 0
