@@ -45,7 +45,7 @@ import {
   redirect,
   Outlet,
 } from "@tanstack/react-router"
-import { lazy, Suspense } from "react"
+import { lazy } from "react"
 
 import type { DVoteRole } from "@/components/layout/Sidebar"
 import {
@@ -56,6 +56,7 @@ import {
   validateInboxSearch,
   getRoleHome,
 } from "@/lib/url-state"
+import { PageSuspense, PlaceholderPage } from "@/app/router-helpers"
 
 // ─── Router Context Type ──────────────────────────────────────────────────────
 
@@ -80,34 +81,11 @@ export interface DVoteRouterContext {
 // ─── Lazy-loaded page components ─────────────────────────────────────────────
 // Phase G: real auth pages. Lazy-imports for code splitting.
 // Phase G→Q: other placeholders replaced per phase.
+// PageSuspense + PlaceholderPage are imported from router-helpers.tsx
+// (extracted to satisfy react-refresh/only-export-components rule).
 
 const LandingPage = lazy(() => import("@/features/auth/LandingPage"))
 const LoginPage   = lazy(() => import("@/features/auth/LoginPage"))
-
-// Suspense wrapper for lazy pages (thin spinner while chunk loads)
-function PageSuspense({ children }: { children: React.ReactNode }) {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex h-screen items-center justify-center">
-          <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      }
-    >
-      {children}
-    </Suspense>
-  )
-}
-
-// Placeholder for routes not yet implemented (Phase H → Q)
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
-      <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-      <p className="text-muted-foreground text-sm">Page coming soon — implementation in progress.</p>
-    </div>
-  )
-}
 
 // ─── Root Route ───────────────────────────────────────────────────────────────
 
