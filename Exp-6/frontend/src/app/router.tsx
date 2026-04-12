@@ -109,6 +109,15 @@ const ObserverDashboardPageLazy = lazy(() =>
 const AnomalyListPageLazy = lazy(() =>
   import("@/features/observer/AnomalyListPage").then((m) => ({ default: m.AnomalyListPage }))
 )
+const ElectionsListPageLazy = lazy(() =>
+  import("@/features/elections/ElectionsListPage").then((m) => ({ default: m.ElectionsListPage }))
+)
+const ElectionDetailPageLazy = lazy(() =>
+  import("@/features/elections/ElectionDetailPage").then((m) => ({ default: m.ElectionDetailPage }))
+)
+const ElectionLineagePageLazy = lazy(() =>
+  import("@/features/elections/ElectionLineagePage").then((m) => ({ default: m.ElectionLineagePage }))
+)
 
 // ─── Root Route ───────────────────────────────────────────────────────────────
 
@@ -360,7 +369,11 @@ const electionsIndexRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/elections",
   validateSearch: validateElectionsSearch,
-  component: () => <PlaceholderPage title="DVote — Elections" />,
+  component: () => (
+    <PageSuspense>
+      <ElectionsListPageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: Election detail ( /elections/:uelectionid ) ───────────────────
@@ -368,7 +381,11 @@ const electionsIndexRoute = createRoute({
 const electionDetailRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/elections/$uelectionid",
-  component: () => <PlaceholderPage title="DVote — Election Detail" />,
+  component: () => (
+    <PageSuspense>
+      <ElectionDetailPageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: Election lineage ( /elections/:uelectionid/lineage ) ──────────
@@ -376,7 +393,11 @@ const electionDetailRoute = createRoute({
 const electionLineageRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/elections/$uelectionid/lineage",
-  component: () => <PlaceholderPage title="DVote — Election Lineage" />,
+  component: () => (
+    <PageSuspense>
+      <ElectionLineagePageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: Results list ( /results ) ────────────────────────────────────
