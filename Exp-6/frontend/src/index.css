@@ -78,4 +78,17 @@
   --radius-lg:  var(--radius);
   --radius-xl:  calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
+
+  /* DVote brand color bridge — enables bg-dvote-saffron, text-dvote-green-dark, etc.
+     CSS custom props from tokens.css :root are re-exposed here as Tailwind utilities. */
+  --color-dvote-saffron:        #E87F24;
+  --color-dvote-saffron-light:  #F4A864;
+  --color-dvote-saffron-dark:   #C46618;
+  --color-dvote-saffron-subtle: #FDF0E4;
+  --color-dvote-green:          #48A111;
+  --color-dvote-green-light:    #77C44A;
+  --color-dvote-green-dark:     #357A0D;
+  --color-dvote-green-subtle:   #EBF6E3;
+  --color-dvote-base:           #FBF6F6;
+  --color-dvote-white:          #FFFFFF;
 }

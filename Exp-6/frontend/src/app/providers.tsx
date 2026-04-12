@@ -21,7 +21,6 @@
  *            BACKEND_HANDOFF_REPORT §9.1 rule 9 (L-B1/L-B2 security policy)
  */
 
-import "sonner/dist/index.css"
 import "@rainbow-me/rainbowkit/styles.css"
 
 import { useEffect, useRef } from "react"

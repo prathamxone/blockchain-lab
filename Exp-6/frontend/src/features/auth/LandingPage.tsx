@@ -27,8 +27,8 @@ import { useEffect } from "react"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useAccount } from "wagmi"
-import { motion, type Variants } from "framer-motion"
-import { Shield, Vote, BarChart3, Zap, Lock, Globe } from "lucide-react"
+import { motion } from "framer-motion"
+import { Shield, Users, BarChart3, Lock, Globe, CheckCircle } from "lucide-react"
 
 import { useAuthStore } from "@/state/auth-store"
 import { getRoleHome } from "@/lib/url-state"
@@ -39,21 +39,21 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 const FEATURE_CARDS = [
   {
     icon: Shield,
-    title: "Tamper-Proof Voting",
+    title: "Secure and Fair Elections",
     description:
-      "Every vote is cryptographically sealed on the Ethereum Sepolia chain. Results cannot be altered after finalization.",
+      "DVote ensures every vote is unique, verified, and correctly counted. Our system eliminates double-voting, fake voter entries, and ballot manipulation.",
   },
   {
-    icon: Vote,
-    title: "Role-Gated Access",
+    icon: Users,
+    title: "For Every Stakeholder",
     description:
-      "Election authority, candidates, voters, and observers each have distinct, enforced access surfaces.",
+      "Voters, candidates, observers, and election authorities each get a dedicated, role-aware experience \u2014 from KYC submission to result declaration.",
   },
   {
     icon: BarChart3,
-    title: "Transparent Results",
+    title: "Transparent Outcomes",
     description:
-      "Real-time election results with full lineage and rerun history, verifiable against on-chain state.",
+      "Results are publicly verifiable with full lineage. Election outcomes \u2014 from candidate wins to NOTA-triggered reruns \u2014 are immutably declared.",
   },
 ] as const
 
@@ -75,7 +75,8 @@ const itemVariants = {
 // ─── LandingPage component ────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  useDocumentTitle("DVote — Transparent Blockchain Elections")
+  // L-F2: Tab title = "DVote - Home" (strict convention: "DVote - PageName")
+  useDocumentTitle("DVote - Home")
 
   const { isConnected } = useAccount()
   const navigate = useNavigate()
@@ -113,11 +114,13 @@ export default function LandingPage() {
           initial="hidden"
           animate="visible"
         >
-          {/* Testnet badge */}
+          {/* ── Hero ─────────────────────────────────────────────── */}
+
+          {/* Verified badge */}
           <motion.div variants={itemVariants}>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-dvote-saffron/30 bg-dvote-saffron-subtle px-3 py-1 text-xs font-semibold text-dvote-saffron-dark mb-6">
-              <Zap className="size-3" aria-hidden="true" />
-              Ethereum Sepolia Testnet
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-dvote-green/30 bg-dvote-green/5 px-3 py-1 text-xs font-semibold text-dvote-green-dark mb-6">
+              <CheckCircle className="size-3" aria-hidden="true" />
+              Trusted · Transparent · Decentralized
             </span>
           </motion.div>
 
@@ -130,20 +133,21 @@ export default function LandingPage() {
             <span className="text-foreground">Vote</span>
           </motion.h1>
 
-          {/* Tagline */}
+          {/* L-F2 tagline — exact text from walkthrough Policy L-F2 */}
           <motion.p
             className="text-xl sm:text-2xl text-muted-foreground font-medium mb-4"
             variants={itemVariants}
           >
-            Decentralized Elections on Ethereum
+            A Decentralized Serverless Voting System
           </motion.p>
 
+          {/* Mission statement — no technical infra details (L-F2) */}
           <motion.p
             className="text-base text-muted-foreground max-w-lg mx-auto mb-10"
             variants={itemVariants}
           >
-            Connect your wallet to participate in tamper-proof, role-gated elections.
-            Every vote is recorded immutably on-chain, ensuring full transparency and verifiability.
+            DVote is India&apos;s open, fair election platform — built to eliminate malpractice,
+            empower every verified citizen, and ensure that every vote truly counts.
           </motion.p>
 
           {/* CTA block */}
@@ -152,7 +156,7 @@ export default function LandingPage() {
             variants={itemVariants}
           >
             {!isConnected ? (
-              /* Not connected: show RainbowKit ConnectButton */
+              /* Not connected: primary CTA (L-F2: "Connect Wallet" / "Get Started") */
               <div className="flex flex-col items-center gap-3">
                 <ConnectButton
                   accountStatus="address"
@@ -164,7 +168,7 @@ export default function LandingPage() {
                 </p>
               </div>
             ) : (
-              /* Connected: show proceed to sign in */
+              /* Connected: proceed to sign in */
               <div className="flex flex-col items-center gap-3">
                 <ConnectButton
                   accountStatus="address"
@@ -185,10 +189,10 @@ export default function LandingPage() {
                   "
                 >
                   <Lock className="size-4" aria-hidden="true" />
-                  Proceed to Sign In
+                  Get Started
                 </button>
                 <p className="text-xs text-muted-foreground">
-                  You will be asked to sign a one-time challenge message.
+                  You will sign a message to verify wallet ownership.
                 </p>
               </div>
             )}
@@ -220,9 +224,18 @@ export default function LandingPage() {
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className="border-t border-border py-6 text-center">
-        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <Globe className="size-3.5" aria-hidden="true" />
-          <span>DVote · Blockchain Lab EXP-6 · Sepolia Testnet</span>
+        <div className="flex flex-col items-center gap-1">
+          {/* L-F2: Full tagline in footer */}
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            <span className="text-primary font-bold">D</span>
+            <span>Vote</span>
+            <span className="text-muted-foreground font-normal">\u2014</span>
+            <span className="text-muted-foreground font-normal">A Decentralized Serverless Voting System</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 mt-0.5">
+            <Globe className="size-3" aria-hidden="true" />
+            <span>Blockchain Lab \u00b7 EXP-6 \u00b7 IT Engineering SEM VIII</span>
+          </div>
         </div>
       </footer>
     </div>
