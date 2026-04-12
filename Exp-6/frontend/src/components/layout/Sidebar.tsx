@@ -6,17 +6,17 @@
  * this component assumes role is already resolved when rendered.
  *
  * Role → visible links mapping:
- *   Owner (Admin/SRO/RO)  → Dashboard, Elections, KYC Queue, Results, Inbox
- *   Voter                 → Dashboard, Elections, My Vote, Results, Inbox, Profile
- *   Candidate             → Dashboard, My Candidacy, Elections, Results, Inbox, Profile
- *   Observer              → Dashboard, Elections, Anomalies, Results, Inbox
+ *   Owner (Admin/SRO/RO)  → Admin Dashboard, Elections, KYC Queue, Results, Inbox
+ *   Voter                 → Voter Dashboard, Elections, My Vote, Results, Inbox, Profile
+ *   Candidate             → Voter Dashboard, My Candidacy, Elections, Results, Inbox, Profile
+ *   Observer              → Observer Dashboard, Elections, Anomalies, Results, Inbox
  *
- * Route paths are placeholders until Phase F (TanStack Router) wires real routes.
- * Using <a> tags here; replaced with <Link> in Phase F.
+ * Phase F: <a> tags replaced with TanStack Router <Link> for client-side navigation.
  *
- * Authority: FEATURE_FRONTEND §5.1 (route list), walkthrough Phase E §3
+ * Authority: FEATURE_FRONTEND §5.1 (route list), walkthrough Phase F §sidebar
  */
 
+import { Link } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 import {
   Home,
@@ -45,8 +45,12 @@ interface NavItem {
 // ─── Role → nav items map ───────────────────────────────────────────────────
 
 function getNavItems(role: DVoteRole): NavItem[] {
+  // Dashboard href is role-home path (§5.4): /admin | /observer | /voter
+  const dashboardHref =
+    role === "Owner" ? "/admin" : role === "Observer" ? "/observer" : "/voter"
+
   const shared: NavItem[] = [
-    { label: "Dashboard",  href: "/dashboard",  icon: Home },
+    { label: "Dashboard",  href: dashboardHref, icon: Home },
     { label: "Elections",  href: "/elections",  icon: Vote },
     { label: "Results",    href: "/results",    icon: BarChart3 },
     { label: "Inbox",      href: "/inbox",      icon: Bell },
@@ -56,7 +60,7 @@ function getNavItems(role: DVoteRole): NavItem[] {
     case "Owner":
       return [
         ...shared,
-        { label: "KYC Queue", href: "/owner/kyc-queue", icon: FileCheck },
+        { label: "KYC Queue", href: "/admin/kyc-queue", icon: FileCheck },
       ]
     case "Voter":
       return [
@@ -142,9 +146,9 @@ export function Sidebar({ role, activePath = "", collapsed = false, className }:
           const isActive = activePath === href || activePath.startsWith(href + "/")
 
           return (
-            <a
+            <Link
               key={href}
-              href={href}
+              to={href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5",
@@ -174,7 +178,7 @@ export function Sidebar({ role, activePath = "", collapsed = false, className }:
                   {badge > 99 ? "99+" : badge}
                 </span>
               )}
-            </a>
+            </Link>
           )
         })}
       </nav>
