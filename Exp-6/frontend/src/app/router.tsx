@@ -97,6 +97,9 @@ const LoginPage   = lazy(() => import("@/features/auth/LoginPage"))
 const KycWizardPageLazy = lazy(() =>
   import("@/features/kyc/KycWizardPage").then((m) => ({ default: m.KycWizardPage }))
 )
+const ProfilePageLazy = lazy(() =>
+  import("@/features/profile/ProfilePage").then((m) => ({ default: m.ProfilePage }))
+)
 
 // ─── Root Route ───────────────────────────────────────────────────────────────
 
@@ -373,7 +376,11 @@ const resultDetailRoute = createRoute({
 const profileRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/profile",
-  component: () => <PlaceholderPage title="DVote — My Profile" />,
+  component: () => (
+    <PageSuspense>
+      <ProfilePageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: KYC Wizard ( /kyc ) — Voter + Candidate only ────────────────
