@@ -37,6 +37,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
 
 import type { DVoteRole } from "@/components/layout/Sidebar"
+import { useInactivityTimer } from "@/hooks/useInactivityTimer"
 
 // ─── Motion variants ──────────────────────────────────────────────────────────
 
@@ -121,6 +122,11 @@ export function AppShell({
   unreadCount = 0,
 }: AppShellProps) {
   const [isMobileOpen, setMobileOpen] = useState(false)
+
+  // Phase H (H.6): 30-min idle timeout — wired here so it only runs when
+  // user is inside the authenticated shell (role resolved, session confirmed).
+  // On expiry: clearSession + redirect to /login?returnTo=<path>
+  useInactivityTimer()
 
   // CDM-4: skeleton guard — show loading shell until role is resolved
   if (role === null) {

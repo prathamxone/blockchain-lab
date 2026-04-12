@@ -33,6 +33,8 @@ import { wagmiConfig } from "@/config/wagmi"
 import { queryClient } from "@/config/query-client"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAuthStore } from "@/state/auth-store"
+import { useSession } from "@/hooks/useSession"
+import { useTokenRefresh } from "@/hooks/useTokenRefresh"
 
 // DVote uses light mode only (no dark mode in MVP — FEATURE_FRONTEND §1.3)
 const dvoteRainbowKitTheme = lightTheme({
@@ -77,6 +79,23 @@ function DisconnectWatcher() {
   return null // No UI — pure effect
 }
 
+// ─── SessionHydrator ──────────────────────────────────────────────────────────
+//
+// Phase H: Startup session hydration + proactive token refresh.
+//
+// Pure-effect component (renders null) that:
+//   1. useSession: POST /auth/refresh → GET /auth/me → setSession/setHydrated
+//   2. useTokenRefresh: wires wireUnauthorizedHandler + schedules proactive renewal
+//
+// Mounted inside the provider tree (inside TooltipProvider) so all contexts
+// are available at the point of mounting.
+
+function SessionHydrator() {
+  useSession()
+  useTokenRefresh()
+  return null
+}
+
 // ─── Providers component ──────────────────────────────────────────────────────
 
 interface ProvidersProps {
@@ -91,6 +110,8 @@ export function Providers({ children }: ProvidersProps) {
           <TooltipProvider>
             {/* L-B2: wallet disconnect listener — must be inside WagmiProvider */}
             <DisconnectWatcher />
+            {/* Phase H: startup hydration + proactive token refresh */}
+            <SessionHydrator />
             {/* Global toast notifications */}
             <Toaster
               position="top-right"
