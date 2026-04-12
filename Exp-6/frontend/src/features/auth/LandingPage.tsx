@@ -47,13 +47,13 @@ const FEATURE_CARDS = [
     icon: Users,
     title: "For Every Stakeholder",
     description:
-      "Voters, candidates, observers, and election authorities each get a dedicated, role-aware experience \u2014 from KYC submission to result declaration.",
+      "Voters, candidates, observers, and election authorities each get a dedicated, role-aware experience — from KYC submission to result declaration.",
   },
   {
     icon: BarChart3,
     title: "Transparent Outcomes",
     description:
-      "Results are publicly verifiable with full lineage. Election outcomes \u2014 from candidate wins to NOTA-triggered reruns \u2014 are immutably declared.",
+      "Results are publicly verifiable with full lineage. Election outcomes — from candidate wins to NOTA-triggered reruns — are immutably declared.",
   },
 ] as const
 
@@ -229,12 +229,12 @@ export default function LandingPage() {
           <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
             <span className="text-primary font-bold">D</span>
             <span>Vote</span>
-            <span className="text-muted-foreground font-normal">\u2014</span>
+            <span className="text-muted-foreground font-normal">—</span>
             <span className="text-muted-foreground font-normal">A Decentralized Serverless Voting System</span>
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 mt-0.5">
             <Globe className="size-3" aria-hidden="true" />
-            <span>Blockchain Lab \u00b7 EXP-6 \u00b7 IT Engineering SEM VIII</span>
+            <span>Blockchain Lab · EXP-6 · IT Engineering SEM VIII</span>
           </div>
         </div>
       </footer>
