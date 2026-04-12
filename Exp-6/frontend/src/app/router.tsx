@@ -45,6 +45,7 @@ import {
   redirect,
   Outlet,
 } from "@tanstack/react-router"
+import { lazy, Suspense } from "react"
 
 import type { DVoteRole } from "@/components/layout/Sidebar"
 import {
@@ -76,10 +77,29 @@ export interface DVoteRouterContext {
   }
 }
 
-// ─── Placeholder page components ─────────────────────────────────────────────
-// Page components are implemented per-phase (G → Q).
-// Placeholders keep TypeScript happy and the build passing.
+// ─── Lazy-loaded page components ─────────────────────────────────────────────
+// Phase G: real auth pages. Lazy-imports for code splitting.
+// Phase G→Q: other placeholders replaced per phase.
 
+const LandingPage = lazy(() => import("@/features/auth/LandingPage"))
+const LoginPage   = lazy(() => import("@/features/auth/LoginPage"))
+
+// Suspense wrapper for lazy pages (thin spinner while chunk loads)
+function PageSuspense({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  )
+}
+
+// Placeholder for routes not yet implemented (Phase H → Q)
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
@@ -98,20 +118,30 @@ const rootRoute = createRootRouteWithContext<DVoteRouterContext>()({
 })
 
 // ─── Public: Landing ( / ) ────────────────────────────────────────────────────
+// Phase G: wired to real LandingPage component.
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => <PlaceholderPage title="DVote — Welcome" />,
+  component: () => (
+    <PageSuspense>
+      <LandingPage />
+    </PageSuspense>
+  ),
 })
 
 // ─── Public: Login ( /login ) ─────────────────────────────────────────────────
+// Phase G: wired to real LoginPage component.
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
   validateSearch: validateLoginSearch,
-  component: () => <PlaceholderPage title="DVote — Login" />,
+  component: () => (
+    <PageSuspense>
+      <LoginPage />
+    </PageSuspense>
+  ),
 })
 
 // ─── Public: Unauthorized ( /unauthorized ) ────────────────────────────────────
