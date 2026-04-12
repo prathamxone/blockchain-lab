@@ -94,6 +94,9 @@ export interface DVoteRouterContext {
 
 const LandingPage = lazy(() => import("@/features/auth/LandingPage"))
 const LoginPage   = lazy(() => import("@/features/auth/LoginPage"))
+const KycWizardPageLazy = lazy(() =>
+  import("@/features/kyc/KycWizardPage").then((m) => ({ default: m.KycWizardPage }))
+)
 
 // ─── Root Route ───────────────────────────────────────────────────────────────
 
@@ -373,6 +376,27 @@ const profileRoute = createRoute({
   component: () => <PlaceholderPage title="DVote — My Profile" />,
 })
 
+// ─── Protected: KYC Wizard ( /kyc ) — Voter + Candidate only ────────────────
+//
+// Query params: ?electionId=xxx&constituencyId=xxx (required by KycWizardPage)
+// Owner/Admin/Observer are redirected to their home pages.
+
+const kycRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: "/kyc",
+  beforeLoad: ({ context }) => {
+    const role = context.auth.role
+    if (role !== "Voter" && role !== "Candidate") {
+      throw redirect({ to: getRoleHome(role) })
+    }
+  },
+  component: () => (
+    <PageSuspense>
+      <KycWizardPageLazy />
+    </PageSuspense>
+  ),
+})
+
 // ─── Protected: Inbox ( /inbox ) — All authenticated roles ───────────────────
 
 const inboxRoute = createRoute({
@@ -413,6 +437,7 @@ const routeTree = rootRoute.addChildren([
       resultsIndexRoute,
       resultDetailRoute,
       profileRoute,
+      kycRoute,
       inboxRoute,
     ]),
   ]),
