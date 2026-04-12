@@ -100,6 +100,15 @@ const KycWizardPageLazy = lazy(() =>
 const ProfilePageLazy = lazy(() =>
   import("@/features/profile/ProfilePage").then((m) => ({ default: m.ProfilePage }))
 )
+const OwnerQueuePageLazy = lazy(() =>
+  import("@/features/owner/OwnerQueuePage").then((m) => ({ default: m.OwnerQueuePage }))
+)
+const ObserverDashboardPageLazy = lazy(() =>
+  import("@/features/observer/ObserverDashboardPage").then((m) => ({ default: m.ObserverDashboardPage }))
+)
+const AnomalyListPageLazy = lazy(() =>
+  import("@/features/observer/AnomalyListPage").then((m) => ({ default: m.AnomalyListPage }))
+)
 
 // ─── Root Route ───────────────────────────────────────────────────────────────
 
@@ -239,7 +248,11 @@ const adminIndexRoute = createRoute({
       throw redirect({ to: getRoleHome(context.auth.role) })
     }
   },
-  component: () => <PlaceholderPage title="DVote — Admin Dashboard" />,
+  component: () => (
+    <PageSuspense>
+      <OwnerQueuePageLazy />
+    </PageSuspense>
+  ),
 })
 
 const adminKycQueueRoute = createRoute({
@@ -251,7 +264,11 @@ const adminKycQueueRoute = createRoute({
       throw redirect({ to: getRoleHome(context.auth.role) })
     }
   },
-  component: () => <PlaceholderPage title="DVote — KYC Review Queue" />,
+  component: () => (
+    <PageSuspense>
+      <OwnerQueuePageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: Observer shell ( /observer ) — Observer role only ─────────────
@@ -264,7 +281,11 @@ const observerIndexRoute = createRoute({
       throw redirect({ to: getRoleHome(context.auth.role) })
     }
   },
-  component: () => <PlaceholderPage title="DVote — Observer Dashboard" />,
+  component: () => (
+    <PageSuspense>
+      <ObserverDashboardPageLazy />
+    </PageSuspense>
+  ),
 })
 
 const observerAnomaliesRoute = createRoute({
@@ -275,7 +296,11 @@ const observerAnomaliesRoute = createRoute({
       throw redirect({ to: getRoleHome(context.auth.role) })
     }
   },
-  component: () => <PlaceholderPage title="DVote — Anomaly Reports" />,
+  component: () => (
+    <PageSuspense>
+      <AnomalyListPageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: Voter/Candidate shell ( /voter ) ──────────────────────────────
