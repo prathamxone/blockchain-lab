@@ -57,6 +57,8 @@ import {
   getRoleHome,
 } from "@/lib/url-state"
 import { PageSuspense, PlaceholderPage } from "@/app/router-helpers"
+import type { WalletGovernanceState } from "@/state/governance-store"
+import { isGovernanceLocked } from "@/state/governance-store"
 
 // ─── Router Context Type ──────────────────────────────────────────────────────
 
@@ -75,6 +77,12 @@ export interface DVoteRouterContext {
     role: DVoteRole | null
     /** EVM checksum wallet address. */
     walletAddress: string | null
+    /**
+     * Wallet governance state from GET /api/v1/wallet/status.
+     * null = not yet fetched. "none" = no lock (happy path).
+     * Phase I: used by beforeLoad guard to redirect locked sessions.
+     */
+    governanceState: WalletGovernanceState | null
   }
 }
 
@@ -201,8 +209,16 @@ const authenticatedLayoutRoute = createRoute({
         },
       })
     }
-    // Governance lock (CDM-5, Phase I): stub — will throw redirect when
-    // wallet status returns "governance_locked" after Phase I wiring.
+    // Governance lock (CDM-5, Phase I): block WalletMismatchLocked sessions from route entry.
+    // Other lock states (PendingApproval, AwaitingRebind, Rejected) allow banners but not full block.
+    // WalletLockBanner in AppShell provides the visual explanation for all states.
+    if (isGovernanceLocked(context.auth.governanceState)) {
+      // Only hard-block WalletMismatchLocked — it's the state requiring immediate action.
+      // Other states get the banner treatment but allow read-only shell access.
+      if (context.auth.governanceState === "WalletMismatchLocked") {
+        throw redirect({ to: "/unauthorized" })
+      }
+    }
   },
   component: () => <Outlet />,
 })
@@ -417,6 +433,7 @@ export const router = createRouter({
       isAuthenticated: false,
       role: null,
       walletAddress: null,
+      governanceState: null,
     },
   },
   defaultPreload: "intent",   // Preload on hover for fast navigation

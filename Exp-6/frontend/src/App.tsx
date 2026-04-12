@@ -23,6 +23,7 @@
 import { RouterProvider } from "@tanstack/react-router"
 import { router } from "@/app/router"
 import { useAuthStore } from "@/state/auth-store"
+import { useGovernanceStore } from "@/state/governance-store"
 
 export default function App() {
   // Read live auth state from in-memory Zustand store.
@@ -31,6 +32,9 @@ export default function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const role = useAuthStore((s) => s.role)
   const walletAddress = useAuthStore((s) => s.walletAddress)
+
+  // Phase I: governance state from polling hook (via GovernanceWatcher in providers.tsx)
+  const governanceState = useGovernanceStore((s) => s.governanceState)
 
   return (
     <RouterProvider
@@ -43,6 +47,7 @@ export default function App() {
           isAuthenticated,
           role,
           walletAddress,
+          governanceState,
         },
       }}
     />

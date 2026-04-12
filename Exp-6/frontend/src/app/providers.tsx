@@ -33,8 +33,10 @@ import { wagmiConfig } from "@/config/wagmi"
 import { queryClient } from "@/config/query-client"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAuthStore } from "@/state/auth-store"
+import { useGovernanceStore } from "@/state/governance-store"
 import { useSession } from "@/hooks/useSession"
 import { useTokenRefresh } from "@/hooks/useTokenRefresh"
+import { useWalletGovernance } from "@/hooks/useWalletGovernance"
 
 // DVote uses light mode only (no dark mode in MVP — FEATURE_FRONTEND §1.3)
 const dvoteRainbowKitTheme = lightTheme({
@@ -71,6 +73,8 @@ function DisconnectWatcher() {
     if (wasConnected && !isConnected && isAuthenticated) {
       // L-B2: clear in-memory token immediately
       clearSession()
+      // Phase I: clear governance state on wallet disconnect
+      useGovernanceStore.getState().clearGovernanceState()
       // Navigate to landing (hard redirect — above router tree)
       window.location.replace("/")
     }
@@ -96,6 +100,24 @@ function SessionHydrator() {
   return null
 }
 
+// ─── GovernanceWatcher ────────────────────────────────────────────────────
+//
+// Phase I: Wallet governance status polling.
+// Pure-effect component (renders null) that mounts useWalletGovernance.
+//
+// Polls GET /api/v1/wallet/status on:
+//   1. Session authentication (isAuthenticated becomes true)
+//   2. Wagmi wallet account change
+//
+// Writes governance state into governance-store for:
+//   - WalletLockBanner (visual layer in AppShell)
+//   - router beforeLoad guard (hard route block)
+
+function GovernanceWatcher() {
+  useWalletGovernance()
+  return null
+}
+
 // ─── Providers component ──────────────────────────────────────────────────────
 
 interface ProvidersProps {
@@ -112,6 +134,8 @@ export function Providers({ children }: ProvidersProps) {
             <DisconnectWatcher />
             {/* Phase H: startup hydration + proactive token refresh */}
             <SessionHydrator />
+            {/* Phase I: wallet governance status polling */}
+            <GovernanceWatcher />
             {/* Global toast notifications */}
             <Toaster
               position="top-right"

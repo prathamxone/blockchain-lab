@@ -38,6 +38,8 @@ import { cn } from "@/lib/utils"
 
 import type { DVoteRole } from "@/components/layout/Sidebar"
 import { useInactivityTimer } from "@/hooks/useInactivityTimer"
+import { useGovernanceStore } from "@/state/governance-store"
+import { WalletLockBanner } from "@/features/governance/WalletLockBanner"
 
 // ─── Motion variants ──────────────────────────────────────────────────────────
 
@@ -123,10 +125,11 @@ export function AppShell({
 }: AppShellProps) {
   const [isMobileOpen, setMobileOpen] = useState(false)
 
-  // Phase H (H.6): 30-min idle timeout — wired here so it only runs when
-  // user is inside the authenticated shell (role resolved, session confirmed).
-  // On expiry: clearSession + redirect to /login?returnTo=<path>
+  // Phase H (H.6): 30-min idle timeout
   useInactivityTimer()
+
+  // Phase I: read governance state to drive WalletLockBanner
+  const governanceState = useGovernanceStore((s) => s.governanceState)
 
   // CDM-4: skeleton guard — show loading shell until role is resolved
   if (role === null) {
@@ -222,6 +225,10 @@ export function AppShell({
             "px-4 py-6 sm:px-6 lg:px-8",
           )}
         >
+          {/* Phase I: Wallet governance lock banner — shown at top of content */}
+          {/* The router beforeLoad guard provides the hard route block for WalletMismatchLocked */}
+          {/* This banner provides the visual explanation layer for all lock states */}
+          <WalletLockBanner governanceState={governanceState} />
           {children}
         </motion.main>
       </div>
