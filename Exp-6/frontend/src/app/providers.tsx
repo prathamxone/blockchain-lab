@@ -34,9 +34,11 @@ import { queryClient } from "@/config/query-client"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAuthStore } from "@/state/auth-store"
 import { useGovernanceStore } from "@/state/governance-store"
+import { useFreshnessStore } from "@/state/freshness-store"
 import { useSession } from "@/hooks/useSession"
 import { useTokenRefresh } from "@/hooks/useTokenRefresh"
 import { useWalletGovernance } from "@/hooks/useWalletGovernance"
+import { useFreshness } from "@/hooks/useFreshness"
 
 // DVote uses light mode only (no dark mode in MVP — FEATURE_FRONTEND §1.3)
 const dvoteRainbowKitTheme = lightTheme({
@@ -75,6 +77,8 @@ function DisconnectWatcher() {
       clearSession()
       // Phase I: clear governance state on wallet disconnect
       useGovernanceStore.getState().clearGovernanceState()
+      // Phase J: clear freshness state on wallet disconnect
+      useFreshnessStore.getState().clearFreshness()
       // Navigate to landing (hard redirect — above router tree)
       window.location.replace("/")
     }
@@ -118,6 +122,27 @@ function GovernanceWatcher() {
   return null
 }
 
+// ─── FreshnessWatcher ─────────────────────────────────────────────────────────
+//
+// Phase J: System freshness polling.
+// Pure-effect component (renders null) that mounts useFreshness.
+//
+// Polls GET /api/v1/system/freshness on:
+//   1. Session authentication (isAuthenticated becomes true)
+//   2. Tab visibility change (visibilitychange event)
+//
+// Active tab: 15s cadence. Background tab: 60s cadence.
+// Focus return → immediate refetch.
+//
+// Writes freshness state to freshness-store for:
+//   - FreshnessBanner (visual layer in AppShell)
+//   - useSensitiveActionGate (CDM-9 gate layer with 5s debounce)
+
+function FreshnessWatcher() {
+  useFreshness()
+  return null
+}
+
 // ─── Providers component ──────────────────────────────────────────────────────
 
 interface ProvidersProps {
@@ -136,6 +161,8 @@ export function Providers({ children }: ProvidersProps) {
             <SessionHydrator />
             {/* Phase I: wallet governance status polling */}
             <GovernanceWatcher />
+            {/* Phase J: system freshness polling (15s active / 60s background) */}
+            <FreshnessWatcher />
             {/* Global toast notifications */}
             <Toaster
               position="top-right"

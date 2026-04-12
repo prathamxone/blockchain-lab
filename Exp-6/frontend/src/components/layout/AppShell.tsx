@@ -40,6 +40,7 @@ import type { DVoteRole } from "@/components/layout/Sidebar"
 import { useInactivityTimer } from "@/hooks/useInactivityTimer"
 import { useGovernanceStore } from "@/state/governance-store"
 import { WalletLockBanner } from "@/features/governance/WalletLockBanner"
+import { FreshnessBanner } from "@/components/ui/FreshnessBanner"
 
 // ─── Motion variants ──────────────────────────────────────────────────────────
 
@@ -229,6 +230,9 @@ export function AppShell({
           {/* The router beforeLoad guard provides the hard route block for WalletMismatchLocked */}
           {/* This banner provides the visual explanation layer for all lock states */}
           <WalletLockBanner governanceState={governanceState} />
+          {/* Phase J: System freshness banner — shown below governance banner */}
+          {/* stale = amber advisory; degraded = red error + actions blocked (CDM-9) */}
+          <FreshnessBanner />
           {children}
         </motion.main>
       </div>
