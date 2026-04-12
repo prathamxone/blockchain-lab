@@ -120,6 +120,7 @@ $RECYCLE.BIN/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/settings.json.example
+*opencode*
 
 # -----------------------------------------------------------------------------
 # Miscellaneous
