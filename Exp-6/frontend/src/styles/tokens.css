@@ -1,0 +1,188 @@
+/**
+ * DVote Frontend — Design Token Definitions
+ *
+ * Layer 1: Tailwind v4 @theme block defines raw palette tokens.
+ *   These map to Tailwind utility classes: bg-dvote-saffron, text-dvote-green, etc.
+ *
+ * Layer 2: Shadcn semantic token map under :root.
+ *   Components use bg-primary, text-foreground, etc.
+ *   DVote maps saffron → primary, green → secondary, off-white → background.
+ *
+ * Authority: FEATURE_FRONTEND §3.2 (tri-color system) + walkthrough Phase D + L-F1
+ *
+ * CDM-2/CDM-3 enforcement: ALL color references use semantic variables.
+ *   Zero direct hex values in component class strings.
+ */
+
+/* ─── Layer 1: Tailwind v4 @theme — Raw Palette Tokens ──────────────────────
+   These custom properties are read by Tailwind v4 to generate utility classes.
+   Access via: bg-dvote-saffron, text-dvote-green, border-dvote-base, etc.
+─────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* ── DVote Tri-Color Core ──────────────────────────────────────────────── */
+
+  /* Saffron — primary accent, CTAs, interactive highlights */
+  --color-dvote-saffron:         #E87F24;
+  --color-dvote-saffron-light:   #F4A864;
+  --color-dvote-saffron-dark:    #C46618;
+  --color-dvote-saffron-subtle:  #FDF0E4;
+
+  /* Green — success, confirmed, approved, election active states */
+  --color-dvote-green:           #48A111;
+  --color-dvote-green-light:     #77C44A;
+  --color-dvote-green-dark:      #357A0D;
+  --color-dvote-green-subtle:    #EBF6E3;
+
+  /* Base — page background (off-white per L-F1) */
+  --color-dvote-base:            #FBF6F6;
+  --color-dvote-white:           #FFFFFF;
+
+  /* ── DVote Neutral Ramp ───────────────────────────────────────────────── */
+
+  /* Used for text, borders, disabled states, subtle UI */
+  --color-dvote-neutral-50:      #F8F8F8;
+  --color-dvote-neutral-100:     #F0F0F0;
+  --color-dvote-neutral-200:     #E4E4E4;
+  --color-dvote-neutral-300:     #CBCBCB;
+  --color-dvote-neutral-400:     #A8A8A8;
+  --color-dvote-neutral-500:     #808080;
+  --color-dvote-neutral-600:     #5C5C5C;
+  --color-dvote-neutral-700:     #3D3D3D;
+  --color-dvote-neutral-800:     #262626;
+  --color-dvote-neutral-900:     #141414;
+
+  /* ── DVote Semantic Status Colors ────────────────────────────────────────
+     Used for system feedback, alerts, and lifecycle state chips.
+     Distinct from tri-color to avoid confusion with brand meaning.
+  ─────────────────────────────────────────────────────────────────────── */
+
+  /* Error / Danger — form errors, destructive actions, rejected states */
+  --color-dvote-error:           #DC2626;
+  --color-dvote-error-light:     #FEF2F2;
+  --color-dvote-error-foreground: #FFFFFF;
+
+  /* Warning — SLA due-soon, upload TTL expiring, stale freshness */
+  --color-dvote-warning:         #D97706;
+  --color-dvote-warning-light:   #FFFBEB;
+  --color-dvote-warning-foreground: #1C1917;
+
+  /* Info — informational banners, polling refresh indicators */
+  --color-dvote-info:            #2563EB;
+  --color-dvote-info-light:      #EFF6FF;
+  --color-dvote-info-foreground: #FFFFFF;
+
+  /* ── DVote Border and Shadow Tokens ──────────────────────────────────── */
+
+  --color-dvote-border:          #E4E4E4;
+  --color-dvote-border-focus:    #E87F24;  /* Saffron focus ring */
+
+  /* ── Typography Scale ────────────────────────────────────────────────── */
+
+  --font-dvote-sans:   "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-dvote-mono:   "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Radius Scale ────────────────────────────────────────────────────── */
+
+  --radius-dvote-sm:   0.25rem;  /* 4px */
+  --radius-dvote-md:   0.5rem;   /* 8px */
+  --radius-dvote-lg:   0.75rem;  /* 12px */
+  --radius-dvote-xl:   1rem;     /* 16px */
+  --radius-dvote-full: 9999px;   /* pill / avatars */
+}
+
+/* ─── Layer 2: Shadcn Semantic CSS Variables ─────────────────────────────────
+   Maps DVote tri-color palette to shadcn's semantic token convention.
+   Components use: bg-primary, text-foreground, border-border, ring-ring, etc.
+   Authority: https://ui.shadcn.com/docs/theming
+─────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    /* ── Surfaces ─────────────────────────────────────────────────────────
+       background: off-white base (#FBF6F6) per L-F1
+       card:       white cards on off-white surfaces per L-F1
+    ───────────────────────────────────────────────────────────────────── */
+    --background:            oklch(0.981 0.005 10);   /* #FBF6F6 */
+    --foreground:            oklch(0.145 0 0);          /* #141414 near-black */
+
+    --card:                  oklch(1 0 0);              /* #FFFFFF */
+    --card-foreground:       oklch(0.145 0 0);
+
+    --popover:               oklch(1 0 0);
+    --popover-foreground:    oklch(0.145 0 0);
+
+    /* ── Primary — Saffron (CTAs, links, active states) ──────────────── */
+    --primary:               oklch(0.668 0.155 52.8);  /* #E87F24 saffron */
+    --primary-foreground:    oklch(1 0 0);              /* white on saffron */
+
+    /* ── Secondary — Green (success, election active, approved) ────────── */
+    --secondary:             oklch(0.618 0.180 130.4); /* #48A111 green */
+    --secondary-foreground:  oklch(1 0 0);
+
+    /* ── Muted — subtle UI, disabled surfaces ──────────────────────────── */
+    --muted:                 oklch(0.94 0 0);           /* #F0F0F0 */
+    --muted-foreground:      oklch(0.556 0 0);          /* #808080 */
+
+    /* ── Accent — saffron subtle tint ───────────────────────────────────── */
+    --accent:                oklch(0.959 0.035 52.8);  /* #FDF0E4 saffron-subtle */
+    --accent-foreground:     oklch(0.579 0.140 52.8);  /* #C46618 saffron-dark */
+
+    /* ── Destructive — error/danger ──────────────────────────────────── */
+    --destructive:           oklch(0.577 0.245 27.325); /* #DC2626 */
+    --destructive-foreground: oklch(1 0 0);
+
+    /* ── Border, Input, Ring ─────────────────────────────────────────── */
+    --border:                oklch(0.90 0 0);           /* #E4E4E4 */
+    --input:                 oklch(0.90 0 0);
+    --ring:                  oklch(0.668 0.155 52.8);  /* saffron focus ring */
+
+    /* ── Chart Colors ─────────────────────────────────────────────────── */
+    --chart-1:               oklch(0.668 0.155 52.8);  /* saffron */
+    --chart-2:               oklch(0.618 0.180 130.4); /* green */
+    --chart-3:               oklch(0.546 0.245 262.9); /* info-blue */
+    --chart-4:               oklch(0.626 0.164 58.3);  /* warning-amber */
+    --chart-5:               oklch(0.577 0.245 27.325);/* error-red */
+
+    /* ── Sidebar ────────────────────────────────────────────────────── */
+    --sidebar:               oklch(0.995 0 0);          /* near-white */
+    --sidebar-foreground:    oklch(0.145 0 0);
+    --sidebar-border:        oklch(0.90 0 0);
+    --sidebar-ring:          oklch(0.668 0.155 52.8);
+
+    /* ── Radius ──────────────────────────────────────────────────────── */
+    --radius:                0.5rem;                    /* 8px default */
+  }
+}
+
+/* ─── Layer 3: Base Typography and Resets ─────────────────────────────────────
+   Applied globally to body and root element.
+─────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-dvote-sans), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Accessible focus ring — NEVER remove; only style (CDM-17) */
+  *:focus-visible {
+    outline: 2px solid var(--color-dvote-border-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-dvote-sm);
+  }
+
+  /* Smooth scrolling — respects prefers-reduced-motion */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}
+

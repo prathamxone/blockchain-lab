@@ -24,6 +24,7 @@ import { RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit"
 
 import { wagmiConfig } from "@/config/wagmi"
 import { queryClient } from "@/config/query-client"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 // DVote uses light mode only (no dark mode in MVP — FEATURE_FRONTEND §1.3)
 const dvoteRainbowKitTheme = lightTheme({
@@ -42,7 +43,9 @@ export function Providers({ children }: ProvidersProps) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={dvoteRainbowKitTheme}>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
