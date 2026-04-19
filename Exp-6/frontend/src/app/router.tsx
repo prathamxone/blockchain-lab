@@ -118,6 +118,15 @@ const ElectionDetailPageLazy = lazy(() =>
 const ElectionLineagePageLazy = lazy(() =>
   import("@/features/elections/ElectionLineagePage").then((m) => ({ default: m.ElectionLineagePage }))
 )
+const ResultsListPageLazy = lazy(() =>
+  import("@/features/results/ResultsListPage").then((m) => ({ default: m.ResultsListPage }))
+)
+const ResultDetailPageLazy = lazy(() =>
+  import("@/features/results/ResultDetailPage").then((m) => ({ default: m.ResultDetailPage }))
+)
+const VoterDashboardPageLazy = lazy(() =>
+  import("@/features/voter/VoterDashboardPage").then((m) => ({ default: m.VoterDashboardPage }))
+)
 
 // ─── Root Route ───────────────────────────────────────────────────────────────
 
@@ -323,7 +332,11 @@ const voterIndexRoute = createRoute({
       throw redirect({ to: getRoleHome(role) })
     }
   },
-  component: () => <PlaceholderPage title="DVote — My Dashboard" />,
+  component: () => (
+    <PageSuspense>
+      <VoterDashboardPageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: Vote cast ( /vote ) — Voter only ──────────────────────────────
@@ -406,7 +419,11 @@ const resultsIndexRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/results",
   validateSearch: validateResultsSearch,
-  component: () => <PlaceholderPage title="DVote — Results" />,
+  component: () => (
+    <PageSuspense>
+      <ResultsListPageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: Result detail ( /results/:uelectionid ) ──────────────────────
@@ -414,7 +431,11 @@ const resultsIndexRoute = createRoute({
 const resultDetailRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/results/$uelectionid",
-  component: () => <PlaceholderPage title="DVote — Result Detail" />,
+  component: () => (
+    <PageSuspense>
+      <ResultDetailPageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Protected: Profile ( /profile ) — All authenticated roles ───────────────
