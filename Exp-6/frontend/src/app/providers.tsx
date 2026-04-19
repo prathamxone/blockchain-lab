@@ -39,6 +39,7 @@ import { useSession } from "@/hooks/useSession"
 import { useTokenRefresh } from "@/hooks/useTokenRefresh"
 import { useWalletGovernance } from "@/hooks/useWalletGovernance"
 import { useFreshness } from "@/hooks/useFreshness"
+import { TutorialOrchestrator, clearAllTutorialProgress } from "@/features/tutorials/TutorialOrchestrator"
 
 // DVote uses light mode only (no dark mode in MVP — FEATURE_FRONTEND §1.3)
 const dvoteRainbowKitTheme = lightTheme({
@@ -79,6 +80,8 @@ function DisconnectWatcher() {
       useGovernanceStore.getState().clearGovernanceState()
       // Phase J: clear freshness state on wallet disconnect
       useFreshnessStore.getState().clearFreshness()
+      // Phase S: clear all tutorial progress on logout/disconnect
+      clearAllTutorialProgress()
       // Navigate to landing (hard redirect — above router tree)
       window.location.replace("/")
     }
@@ -170,6 +173,8 @@ export function Providers({ children }: ProvidersProps) {
               closeButton
               duration={4000}
             />
+            {/* Phase S: Guided tutorial overlay — auto-starts on first role visit */}
+            <TutorialOrchestrator />
             {children}
           </TooltipProvider>
         </RainbowKitProvider>
