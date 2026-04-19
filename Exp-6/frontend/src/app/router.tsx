@@ -127,6 +127,9 @@ const ResultDetailPageLazy = lazy(() =>
 const VoterDashboardPageLazy = lazy(() =>
   import("@/features/voter/VoterDashboardPage").then((m) => ({ default: m.VoterDashboardPage }))
 )
+const InboxPageLazy = lazy(() =>
+  import("@/features/inbox/InboxPage").then((m) => ({ default: m.InboxPage }))
+)
 
 // ─── Root Route ───────────────────────────────────────────────────────────────
 
@@ -477,7 +480,11 @@ const inboxRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/inbox",
   validateSearch: validateInboxSearch,
-  component: () => <PlaceholderPage title="DVote — Inbox" />,
+  component: () => (
+    <PageSuspense>
+      <InboxPageLazy />
+    </PageSuspense>
+  ),
 })
 
 // ─── Route Tree Assembly ──────────────────────────────────────────────────────
