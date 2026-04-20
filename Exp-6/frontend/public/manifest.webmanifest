@@ -1,0 +1,22 @@
+{
+  "name": "DVote - Decentralized Voting System",
+  "short_name": "DVote",
+  "description": "A decentralized serverless voting system for democratic elections",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF6F6",
+  "theme_color": "#E87F24",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["government", "politics", "utilities"],
+  "lang": "en-IN",
+  "dir": "ltr"
+}

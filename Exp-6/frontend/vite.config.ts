@@ -20,14 +20,64 @@ export default defineConfig({
     strictPort: true,
   },
   build: {
-    sourcemap: true,
+    sourcemap: false,
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom"],
-          "vendor-wagmi": ["wagmi", "viem", "@rainbow-me/rainbowkit"],
-          "vendor-router": ["@tanstack/react-router"],
-          "vendor-query": ["@tanstack/react-query"],
+        manualChunks(id) {
+          // Only chunk node_modules
+          if (!id.includes("node_modules")) return
+          
+          // Group by ecosystem
+          if (
+            id.includes("react-dom") ||
+            id.includes("/react/") ||
+            id.includes("/scheduler/")
+          ) {
+            return "vendor-react"
+          }
+          
+          if (
+            id.includes("wagmi") ||
+            id.includes("viem") ||
+            id.includes("@wagmi") ||
+            id.includes("@rainbow-me")
+          ) {
+            return "vendor-wagmi"
+          }
+          
+          if (
+            id.includes("@tanstack/react-router") ||
+            id.includes("@tanstack/react-query") ||
+            id.includes("@tanstack/query")
+          ) {
+            return "vendor-tanstack"
+          }
+          
+          if (
+            id.includes("@walletconnect") ||
+            id.includes("@web3modal") ||
+            id.includes("@reown") ||
+            id.includes("walletconnect")
+          ) {
+            return "vendor-walletconnect"
+          }
+          
+          if (
+            id.includes("@coinbase") ||
+            id.includes("ethers") ||
+            id.includes("@eth-optimism")
+          ) {
+            return "vendor-eth-libs"
+          }
+          
+          if (id.includes("framer-motion")) {
+            return "vendor-motion"
+          }
+          
+          // All other node_modules into misc
+          return "vendor-misc"
         },
       },
     },
