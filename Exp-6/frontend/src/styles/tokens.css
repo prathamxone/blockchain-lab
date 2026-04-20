@@ -184,5 +184,29 @@
       scroll-behavior: smooth;
     }
   }
+
+  /* ── WIG Compliance: Touch and Reduced Motion ────────────────────────────────
+     Authority: docs/WIG.md Phase T
+  ─────────────────────────────────────────────────────────────────────────── */
+
+  /* Prevent double-tap zoom on interactive elements (WIG §Interactions) */
+  button, a, [role="button"], input, select, textarea, label[for] {
+    touch-action: manipulation;
+  }
+
+  /* Disable tap highlight on mobile (WIG §Targets & Input) */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Respect reduced motion preference (WIG §Animation) */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
